@@ -1,29 +1,41 @@
 // js/admin.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar sesión (Usamos el sistema de autenticación de data.js)
+    const currentUser = getCurrentUser();
+    
     const loginForm = document.getElementById('loginForm');
     const loginScreen = document.getElementById('loginScreen');
     const adminPanel = document.getElementById('adminPanel');
     const logoutBtn = document.getElementById('logoutBtn');
     
-    if(sessionStorage.getItem('duoAdminLogged')) showAdmin();
+    if (currentUser && currentUser.role === 'admin') {
+        showAdmin();
+    } else if (currentUser && currentUser.role !== 'admin') {
+        document.getElementById('loginError').textContent = 'Acceso denegado. No eres administrador.';
+        document.getElementById('loginError').style.display = 'block';
+    }
 
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
+        const userVal = document.getElementById('username').value.trim();
+        const passVal = document.getElementById('password').value.trim();
         
-        if(user === 'admin' && pass === 'admin123') {
-            sessionStorage.setItem('duoAdminLogged', 'true');
+        const allUsers = getUsers();
+        const user = allUsers.find(u => u.username === userVal && u.password === passVal);
+        
+        if (user && user.role === 'admin') {
+            setCurrentUser(user);
             showAdmin();
         } else {
+            document.getElementById('loginError').textContent = 'Credenciales incorrectas o sin permisos.';
             document.getElementById('loginError').style.display = 'block';
         }
     });
 
     logoutBtn.addEventListener('click', () => {
-        sessionStorage.removeItem('duoAdminLogged');
-        location.reload(); 
+        logoutUser();
+        location.href = 'index.html'; // Redirige al inicio
     });
 
     function showAdmin() {
@@ -90,10 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let finalImageUrl = urlInput.value;
 
-        // Si se subió un archivo, lo procesamos
         if (fileInput.files && fileInput.files[0]) {
             try {
-                // Usamos la función de data.js para comprimir y pasar a base64
                 finalImageUrl = await resizeImageFile(fileInput.files[0]);
             } catch (error) {
                 showToast('Error al procesar la imagen', 'error');
@@ -146,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('prodCategory').value = prod.category;
         document.getElementById('prodStock').value = prod.stock;
         
-        // Limpiamos ambos inputs de imagen pero mostramos la URL si es string corto, sino dejamos vacío
         document.getElementById('prodImage').value = prod.image.length < 500 ? prod.image : ''; 
         document.getElementById('prodImageFile').value = '';
         

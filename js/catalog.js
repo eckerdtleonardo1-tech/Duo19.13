@@ -3,26 +3,33 @@
 document.addEventListener('DOMContentLoaded', () => {
     initData();
     let products = getProducts();
-    let cart = JSON.parse(localStorage.getItem('duo1913_cart')) || [];
+    let currentUser = getCurrentUser();
+    let cart = currentUser ? currentUser.cart : [];
     
+    // UI Elements
     const grid = document.getElementById('productGrid');
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const sortFilter = document.getElementById('sortFilter');
     
-    // Modal Details
-    const modal = document.getElementById('productModal');
-    const closeModal = document.querySelector('.close-modal');
+    // Modals
+    const productModal = document.getElementById('productModal');
+    const authModal = document.getElementById('authModal');
     let currentSelectedProduct = null;
 
     // Cart DOM
-    const cartBtn = document.getElementById('cartBtn');
     const cartSidebar = document.getElementById('cartSidebar');
-    const closeCart = document.getElementById('closeCart');
-    const cartBadge = document.getElementById('cartBadge');
+    const cartBadgeHeader = document.getElementById('cartBadgeHeader');
     const cartBody = document.getElementById('cartBody');
     const cartTotal = document.getElementById('cartTotal');
-    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    // Header toggles
+    const menuToggleBtn = document.getElementById('menuToggleBtn');
+    const collapsibleMenu = document.getElementById('collapsibleMenu');
+    
+    menuToggleBtn.addEventListener('click', () => {
+        collapsibleMenu.classList.toggle('open');
+    });
 
     // ---------------- UI & NOTIFICATIONS ---------------- //
     function showToast(message, type = 'success') {
@@ -38,6 +45,107 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
+
+    // ---------------- AUTHENTICATION ---------------- //
+    let isLoginMode = true;
+    const authForm = document.getElementById('authForm');
+    const toggleAuthMode = document.getElementById('toggleAuthMode');
+    const authTitle = document.getElementById('authTitle');
+    const authToggleText = document.getElementById('authToggleText');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authError = document.getElementById('authError');
+    
+    document.getElementById('userBtn').addEventListener('click', () => {
+        if(currentUser) {
+            showToast('Ya has iniciado sesión.');
+        } else {
+            authModal.classList.add('active');
+        }
+    });
+
+    document.getElementById('closeAuthModal').addEventListener('click', () => authModal.classList.remove('active'));
+
+    toggleAuthMode.addEventListener('click', (e) => {
+        e.preventDefault();
+        isLoginMode = !isLoginMode;
+        authError.style.display = 'none';
+        
+        if(isLoginMode) {
+            authTitle.textContent = 'Iniciar Sesión';
+            authSubmitBtn.textContent = 'Entrar';
+            authToggleText.textContent = '¿No tienes cuenta?';
+            toggleAuthMode.textContent = 'Regístrate';
+        } else {
+            authTitle.textContent = 'Crear Cuenta';
+            authSubmitBtn.textContent = 'Registrarse';
+            authToggleText.textContent = '¿Ya tienes cuenta?';
+            toggleAuthMode.textContent = 'Inicia sesión';
+        }
+    });
+
+    authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userVal = document.getElementById('authUsername').value.trim();
+        const passVal = document.getElementById('authPassword').value.trim();
+        
+        if(!userVal || !passVal) return;
+
+        let allUsers = getUsers();
+        
+        if(isLoginMode) {
+            const user = allUsers.find(u => u.username === userVal && u.password === passVal);
+            if(user) {
+                setCurrentUser(user);
+                showToast(`¡Bienvenido de nuevo, ${user.username}!`);
+                authModal.classList.remove('active');
+                handleLoginState();
+            } else {
+                authError.textContent = 'Usuario o contraseña incorrectos.';
+                authError.style.display = 'block';
+            }
+        } else {
+            if(allUsers.find(u => u.username === userVal)) {
+                authError.textContent = 'El usuario ya existe.';
+                authError.style.display = 'block';
+            } else {
+                const newUser = { username: userVal, password: passVal, role: 'customer', cart: [] };
+                allUsers.push(newUser);
+                saveUsers(allUsers);
+                setCurrentUser(newUser);
+                showToast(`¡Cuenta creada con éxito!`);
+                authModal.classList.remove('active');
+                handleLoginState();
+            }
+        }
+    });
+
+    function handleLoginState() {
+        currentUser = getCurrentUser();
+        const greetingBox = document.getElementById('userGreeting');
+        const adminLink = document.getElementById('adminLink');
+        
+        if(currentUser) {
+            cart = currentUser.cart || [];
+            greetingBox.style.display = 'flex';
+            document.getElementById('greetingName').textContent = currentUser.username;
+            if(currentUser.role === 'admin') {
+                adminLink.style.display = 'inline-block';
+            } else {
+                adminLink.style.display = 'none';
+            }
+        } else {
+            cart = [];
+            greetingBox.style.display = 'none';
+            adminLink.style.display = 'none';
+        }
+        updateCartUI();
+    }
+
+    document.getElementById('logoutLink').addEventListener('click', () => {
+        logoutUser();
+        handleLoginState();
+        showToast('Sesión cerrada.');
+    });
 
     // ---------------- RENDERING PRODUCTS ---------------- //
     function renderProducts(items) {
@@ -63,20 +171,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ---------------- FILTERS & SORTING ---------------- //
     function updateProductView() {
         const query = searchInput.value.toLowerCase();
         const category = categoryFilter.value;
         const sortBy = sortFilter.value;
 
-        // Filter
         let filtered = products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query);
             const matchesCat = category === 'all' || p.category === category;
             return matchesSearch && matchesCat;
         });
 
-        // Sort
         if (sortBy === 'price-asc') filtered.sort((a, b) => a.price - b.price);
         if (sortBy === 'price-desc') filtered.sort((a, b) => b.price - a.price);
         if (sortBy === 'name-asc') filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -104,27 +209,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const addToCartBtn = document.getElementById('addToCartBtn');
         addToCartBtn.disabled = prod.stock <= 0;
         
-        modal.classList.add('active');
+        productModal.classList.add('active');
     }
 
-    closeModal.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => {
-        if(e.target === modal) modal.classList.remove('active');
-    });
+    document.getElementById('closeProductModal').addEventListener('click', () => productModal.classList.remove('active'));
 
     document.getElementById('addToCartBtn').addEventListener('click', () => {
+        if (!currentUser) {
+            showToast('Inicia sesión para usar el carrito', 'error');
+            productModal.classList.remove('active');
+            authModal.classList.add('active');
+            return;
+        }
         if (currentSelectedProduct) {
             addToCart(currentSelectedProduct);
-            modal.classList.remove('active');
+            productModal.classList.remove('active');
         }
     });
 
     // ---------------- SHOPPING CART LOGIC ---------------- //
-    function saveCart() {
-        localStorage.setItem('duo1913_cart', JSON.stringify(cart));
-        updateCartUI();
-    }
-
     function addToCart(product) {
         const existing = cart.find(item => item.id === product.id);
         if (existing) {
@@ -132,14 +235,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 existing.qty += 1;
                 showToast(`Agregaste otro "${product.name}" al carrito.`);
             } else {
-                showToast(`No hay más stock de "${product.name}".`, 'error');
+                showToast(`No hay más stock disponible.`, 'error');
                 return;
             }
         } else {
             cart.push({ ...product, qty: 1 });
             showToast(`"${product.name}" agregado al carrito.`);
         }
-        saveCart();
+        syncUserCart(cart);
+        updateCartUI();
     }
 
     window.updateCartQty = (id, change) => {
@@ -156,13 +260,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(`Stock máximo alcanzado`, 'error');
                 return;
             }
-            saveCart();
+            syncUserCart(cart);
+            updateCartUI();
         }
     };
 
     function updateCartUI() {
         const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-        cartBadge.textContent = totalItems;
+        cartBadgeHeader.textContent = totalItems;
         
         cartBody.innerHTML = '';
         if (cart.length === 0) {
@@ -195,17 +300,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cart Sidebar Toggle
-    cartBtn.addEventListener('click', () => cartSidebar.classList.add('active'));
-    closeCart.addEventListener('click', () => cartSidebar.classList.remove('active'));
-
-    // Checkout via WhatsApp
-    checkoutBtn.addEventListener('click', () => {
-        if (cart.length === 0) {
-            showToast('El carrito está vacío', 'error');
+    document.getElementById('cartBtnHeader').addEventListener('click', () => {
+        if (!currentUser) {
+            showToast('Inicia sesión para ver tu carrito', 'error');
+            authModal.classList.add('active');
             return;
         }
+        cartSidebar.classList.add('active');
+    });
+    
+    document.getElementById('closeCart').addEventListener('click', () => cartSidebar.classList.remove('active'));
 
-        let message = `*¡Hola Duo19-13!* Quiero realizar el siguiente pedido:\n\n`;
+    // Checkout via WhatsApp
+    document.getElementById('checkoutBtn').addEventListener('click', () => {
+        if (cart.length === 0) return;
+
+        let message = `*¡Hola Duo19-13!* Soy ${currentUser.username}. Quiero realizar el siguiente pedido:\n\n`;
         let total = 0;
 
         cart.forEach(item => {
@@ -216,19 +326,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         message += `\n*Total a pagar: $${total.toLocaleString('es-AR')}*`;
         
-        const wppNumber = '5493329534029'; // El número configurado
+        const wppNumber = '5493329534029'; 
         window.open(`https://wa.me/${wppNumber}?text=${encodeURIComponent(message)}`, '_blank');
         
-        // Opcional: vaciar carrito después de enviar
-        // cart = [];
-        // saveCart();
+        // Vaciamos el carrito tras enviar (Opcional, lo activamos)
+        cart = [];
+        syncUserCart(cart);
+        updateCartUI();
+        cartSidebar.classList.remove('active');
     });
 
     // Inicializar
+    handleLoginState();
     updateProductView();
-    updateCartUI();
 
-    // Sincronización entre pestañas
+    // Sync multi-pestaña
     window.addEventListener('storage', (e) => {
         if (e.key === 'duo1913_products') {
             products = getProducts();
