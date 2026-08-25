@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duo19-13 | Setup Gamer & Accesorios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <a href="index.html" class="logo">Duo19<span>-</span>13</a>
+            
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Buscar productos...">
+                
+                <select id="categoryFilter">
+                    <option value="all">Todas las categorías</option>
+                    <option value="perifericos">Periféricos</option>
+                    <option value="iluminacion">Iluminación RGB</option>
+                    <option value="organizacion">Organización</option>
+                    <option value="decoracion">Decoración</option>
+                </select>
+
+                <!-- Filtro de ordenamiento (Nueva funcionalidad) -->
+                <select id="sortFilter">
+                    <option value="default">Ordenar por...</option>
+                    <option value="price-asc">Menor precio</option>
+                    <option value="price-desc">Mayor precio</option>
+                    <option value="name-asc">Nombre (A-Z)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="productGrid" class="product-grid">
+            <!-- Productos -->
+        </div>
+    </main>
+
+    <!-- Modal Detalles -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <img id="modalImg" src="" alt="Producto">
+                <div class="modal-info">
+                    <h2 id="modalTitle"></h2>
+                    <span id="modalCategory" class="badge"></span>
+                    <p id="modalDescription"></p>
+                    <div class="price-stock">
+                        <span id="modalPrice" class="price"></span>
+                        <span id="modalStock" class="stock"></span>
+                    </div>
+                    <!-- Botón modificado para Carrito -->
+                    <button id="addToCartBtn" class="btn-primary">Agregar al Carrito 🛒</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón flotante Carrito -->
+    <div class="cart-btn" id="cartBtn">
+        🛒
+        <span class="cart-badge" id="cartBadge">0</span>
+    </div>
+
+    <!-- Sidebar Carrito -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h2>Tu Pedido</h2>
+            <span class="close-modal" id="closeCart" style="position:static; margin-left:auto;">&times;</span>
+        </div>
+        <div class="cart-body" id="cartBody">
+            <!-- Items del carrito -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">$0</span>
+            </div>
+            <button id="checkoutBtn" class="btn-primary" style="width: 100%">Enviar pedido por WhatsApp 💬</button>
+        </div>
+    </div>
+
+    <!-- Contenedor para Notificaciones (Toasts) -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/catalog.js"></script>
+</body>
+</html>
