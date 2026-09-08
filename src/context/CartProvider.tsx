@@ -16,6 +16,7 @@ import type { CartItem, Product } from "@/types";
 interface AddResult {
   ok: boolean;
   message?: string;
+  requiresAuth?: boolean;
 }
 
 interface CartContextValue {
@@ -173,6 +174,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (product: Product, qty = 1): AddResult => {
+      // Requiere sesión activa para agregar al carrito
+      if (!user) {
+        return { ok: false, requiresAuth: true };
+      }
+
       let result: AddResult = { ok: true };
       setItems((prev) => {
         const existing = prev.find((i) => i.productId === product.id);
@@ -201,8 +207,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
       return result;
     },
-    [syncToServer]
+    [syncToServer, user]
   );
+
 
   const removeItem = useCallback(
     (productId: number) => {

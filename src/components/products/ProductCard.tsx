@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
 import { ProductModal } from "@/components/products/ProductModal";
+import { LoginModal } from "@/components/auth/LoginModal";
 import type { Product } from "@/types";
 
 const formatCurrency = (value: number) =>
@@ -20,9 +21,15 @@ export function ProductCard({
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   function handleAdd() {
     const result = addItem(product, 1);
+    if (result.requiresAuth) {
+      // No está logueado → abre el modal de login/registro
+      setLoginOpen(true);
+      return;
+    }
     if (result.ok) {
       showToast(`${product.name} agregado al carrito`);
     } else {
@@ -76,7 +83,7 @@ export function ProductCard({
           {formatCurrency(product.price)}
         </p>
 
-        {/* Stock indicator */}
+        {/* Low stock warning */}
         {!isOutOfStock && product.stock <= 5 && (
           <p className="text-xs text-amber-400" aria-live="polite">
             ¡Últimas {product.stock} unidades!
@@ -98,6 +105,9 @@ export function ProductCard({
       {detailsOpen && (
         <ProductModal product={product} onClose={() => setDetailsOpen(false)} />
       )}
+
+      {/* Modal de login — se abre cuando el usuario intenta agregar sin sesión */}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </article>
   );
 }
