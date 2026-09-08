@@ -1,13 +1,10 @@
 "use client";
 
-import { CATEGORIES } from "@/lib/constants";
+import { categoryLabel } from "@/lib/constants";
 import type { Product } from "@/types";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
-
-const categoryLabel = (value: string) =>
-  CATEGORIES.find((c) => c.value === value)?.label ?? value;
 
 export function ProductsTable({
   products,

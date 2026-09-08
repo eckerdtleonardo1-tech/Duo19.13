@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
+import { ProductModal } from "@/components/products/ProductModal";
 import type { Product } from "@/types";
 
 const formatCurrency = (value: number) =>
@@ -11,6 +13,7 @@ const formatCurrency = (value: number) =>
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { showToast } = useToast();
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   function handleAdd() {
     const result = addItem(product, 1);
@@ -23,7 +26,11 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-bg-card transition hover:border-neon-primary">
-      <div className="relative aspect-square w-full bg-bg-dark">
+      <button
+        onClick={() => setDetailsOpen(true)}
+        className="relative aspect-square w-full cursor-zoom-in bg-bg-dark"
+        aria-label={`Ver detalles de ${product.name}`}
+      >
         <Image
           src={product.image}
           alt={product.name}
@@ -36,11 +43,16 @@ export function ProductCard({ product }: { product: Product }) {
             Sin stock
           </span>
         )}
-      </div>
+      </button>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="line-clamp-2 font-[family-name:var(--font-heading)] text-sm text-text-main">
-          {product.name}
-        </h3>
+        <button
+          onClick={() => setDetailsOpen(true)}
+          className="text-left"
+        >
+          <h3 className="line-clamp-2 font-[family-name:var(--font-heading)] text-sm text-text-main hover:text-neon-secondary">
+            {product.name}
+          </h3>
+        </button>
         <p className="mt-auto text-lg font-semibold text-neon-secondary">
           {formatCurrency(product.price)}
         </p>
@@ -52,6 +64,12 @@ export function ProductCard({ product }: { product: Product }) {
           Agregar al carrito
         </button>
       </div>
+
+      <ProductModal
+        product={product}
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+      />
     </div>
   );
 }

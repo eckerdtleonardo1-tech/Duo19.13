@@ -26,6 +26,9 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm text-text-muted md:flex">
+          <Link href="/" className="hover:text-neon-secondary">
+            Inicio
+          </Link>
           <Link href="/catalog" className="hover:text-neon-secondary">
             Catálogo
           </Link>
@@ -97,6 +100,9 @@ export function Header() {
       {menuOpen && (
         <div className="border-t border-border px-4 py-3 md:hidden">
           <nav className="flex flex-col gap-2 text-sm text-text-muted">
+            <Link href="/" onClick={() => setMenuOpen(false)}>
+              Inicio
+            </Link>
             <Link href="/catalog" onClick={() => setMenuOpen(false)}>
               Catálogo
             </Link>

@@ -17,6 +17,10 @@ export type CategoryValue = (typeof CATEGORIES)[number]["value"];
 
 export const CATEGORY_VALUES = CATEGORIES.map((c) => c.value) as CategoryValue[];
 
+export function categoryLabel(value: string): string {
+  return CATEGORIES.find((c) => c.value === value)?.label ?? value;
+}
+
 export const MAX_GALLERY_IMAGES = 4;
 
 export const ORDER_STATUSES = [
