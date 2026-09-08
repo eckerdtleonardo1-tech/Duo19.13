@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Orbitron, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthProvider";
@@ -68,6 +68,11 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+};
+
+// themeColor no va en el export de metadata: Next lo ignora ahí (avisa en cada
+// build) y el <meta name="theme-color"> nunca llega a emitirse.
+export const viewport: Viewport = {
   themeColor: "#b026ff",
 };
 
