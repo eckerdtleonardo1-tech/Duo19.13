@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/products/ProductCard";
 import type { Product } from "@/types";
@@ -15,29 +15,32 @@ function getSlidesPerView(): number {
 
 const AUTOPLAY_INTERVAL = 3500; // ms entre avances automáticos
 
+// El tamaño de ventana y prefers-reduced-motion son estado del navegador, no de
+// React: useSyncExternalStore los lee sin romper la hidratación (en el server
+// caen en los valores por defecto).
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+function subscribeResize(onChange: () => void) {
+  window.addEventListener("resize", onChange);
+  return () => window.removeEventListener("resize", onChange);
+}
+
 export function FeaturedCarousel({ products }: { products: Product[] }) {
   const [current, setCurrent] = useState(0);
-  const [perView, setPerView] = useState(3);
   const [isPaused, setIsPaused] = useState(false);
-  const [prefersReduced, setPrefersReduced] = useState(false);
+  const perView = useSyncExternalStore(subscribeResize, getSlidesPerView, () => 3);
+  const prefersReduced = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false
+  );
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Detectar prefers-reduced-motion y tamaño de ventana
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReduced(mq.matches);
-    const onMqChange = (e: MediaQueryListEvent) => setPrefersReduced(e.matches);
-    mq.addEventListener("change", onMqChange);
-
-    const updatePerView = () => setPerView(getSlidesPerView());
-    updatePerView();
-    window.addEventListener("resize", updatePerView);
-
-    return () => {
-      mq.removeEventListener("change", onMqChange);
-      window.removeEventListener("resize", updatePerView);
-    };
-  }, []);
 
   const totalSlides = Math.ceil(products.length / perView);
 
