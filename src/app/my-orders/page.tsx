@@ -6,7 +6,10 @@ const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
 
 const formatDate = (iso: string) =>
-  new Intl.DateTimeFormat("es-AR", { dateStyle: "medium" }).format(new Date(iso));
+  new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeZone: "America/Argentina/Buenos_Aires",
+  }).format(new Date(iso));
 
 export default async function MyOrdersPage() {
   const user = await getSessionUser();

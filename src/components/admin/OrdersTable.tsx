@@ -6,10 +6,14 @@ import type { Order } from "@/types";
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
 
+// timeZone fijo: sin esto, el server (UTC en Vercel) y el navegador del
+// admin formatean la misma fecha distinto y React tira un hydration error.
 const formatDate = (iso: string) =>
-  new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(
-    new Date(iso)
-  );
+  new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Argentina/Buenos_Aires",
+  }).format(new Date(iso));
 
 export function OrdersTable({
   orders,

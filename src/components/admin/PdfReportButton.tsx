@@ -27,7 +27,9 @@ export function PdfReportButton({ orders }: { orders: Order[] }) {
           o.customerName,
           formatCurrency(o.totalAmount),
           o.status,
-          new Date(o.createdAt).toLocaleDateString("es-AR"),
+          new Date(o.createdAt).toLocaleDateString("es-AR", {
+            timeZone: "America/Argentina/Buenos_Aires",
+          }),
         ]),
         headStyles: { fillColor: [176, 38, 255] },
         theme: "grid",
