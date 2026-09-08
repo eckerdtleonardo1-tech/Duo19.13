@@ -1,0 +1,45 @@
+# Mantiene despierta la base de Supabase.
+#
+# El plan gratuito de Supabase pausa el proyecto tras ~7 días sin actividad, y
+# reactivarlo es manual: la tienda quedaría caída hasta que alguien lo note.
+# Este job consulta /api/health (que hace un SELECT contra la base) cada 2 días,
+# con margen de sobra frente a esa ventana.
+#
+# Ojo: GitHub deshabilita los workflows programados si el repo pasa 60 días sin
+# commits. Si el proyecto queda quieto, revisá que siga activo en la pestaña
+# Actions (o corré el workflow a mano con "Run workflow").
+
+name: Keep Supabase alive
+
+on:
+  schedule:
+    # 09:00 UTC (06:00 en Argentina) los días impares del mes → cada 2 días
+    - cron: "0 9 */2 * *"
+  # Permite ejecutarlo manualmente desde la pestaña Actions
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping database health endpoint
+        run: |
+          URL="${SITE_URL:-https://duo19-13.vercel.app}/api/health"
+          echo "Consultando $URL"
+
+          # --fail: corta con error si el status es 4xx/5xx (el endpoint responde
+          # 503 si la base no contesta), y reintenta por si Vercel arranca en frío.
+          RESPONSE=$(curl --silent --show-error --fail \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            --max-time 30 "$URL")
+
+          echo "Respuesta: $RESPONSE"
+          echo "$RESPONSE" | grep -q '"database":"up"' || {
+            echo "::error::La base no respondió como esperado"
+            exit 1
+          }
+          echo "Base activa."
+        env:
+          # Opcional: definir la variable SITE_URL en Settings > Secrets and
+          # variables > Actions > Variables si el sitio cambia de dominio.
+          SITE_URL: ${{ vars.SITE_URL }}
