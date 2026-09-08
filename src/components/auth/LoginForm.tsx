@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthProvider";
 
-export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
+export function LoginForm({
+  onSuccess,
+  onNavigate,
+}: {
+  onSuccess?: () => void;
+  /** Se llama al salir del formulario por un link, para cerrar el modal si está abierto. */
+  onNavigate?: () => void;
+}) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,6 +53,15 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 text-text-main outline-none focus:border-neon-secondary"
         />
+      </div>
+      <div className="-mt-2 text-right">
+        <Link
+          href="/forgot-password"
+          onClick={onNavigate}
+          className="text-xs text-text-muted transition-colors hover:text-neon-secondary"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
       </div>
       {error && <p className="text-sm text-danger">{error}</p>}
       <button

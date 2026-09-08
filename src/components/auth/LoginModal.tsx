@@ -20,7 +20,7 @@ export function LoginModal({
         {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
       </h2>
       {mode === "login" ? (
-        <LoginForm onSuccess={onClose} />
+        <LoginForm onSuccess={onClose} onNavigate={onClose} />
       ) : (
         <RegisterForm onSuccess={onClose} />
       )}

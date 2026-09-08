@@ -68,3 +68,31 @@ export async function recordRegisterAttempt(ip: string) {
     [ip]
   );
 }
+
+// ── Password reset ────────────────────────────────────────────────────────────
+
+const RESET_IP_WINDOW_MINUTES = 60;
+const RESET_IP_MAX_ATTEMPTS = 5; // máximo 5 pedidos de recuperación por IP por hora
+
+/**
+ * Evita que se use el formulario de recuperación para spamear la casilla de
+ * alguien (o para sondear qué emails existen). Reutiliza login_attempts con
+ * email = '__reset__', igual que el registro.
+ */
+export async function isPasswordResetLocked(ip: string): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS count FROM login_attempts
+     WHERE ip_address = $1
+       AND email = '__reset__'
+       AND attempted_at > now() - interval '${RESET_IP_WINDOW_MINUTES} minutes'`,
+    [ip]
+  );
+  return rows[0].count >= RESET_IP_MAX_ATTEMPTS;
+}
+
+export async function recordPasswordResetAttempt(ip: string) {
+  await pool.query(
+    "INSERT INTO login_attempts (ip_address, email, success) VALUES ($1, '__reset__', true)",
+    [ip]
+  );
+}
