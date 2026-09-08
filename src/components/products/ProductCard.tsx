@@ -41,7 +41,7 @@ export function ProductCard({
 
   return (
     <article
-      className="group flex flex-col overflow-hidden rounded-lg border border-border bg-bg-card transition-all duration-200 hover:border-neon-primary hover:shadow-[0_0_16px_rgba(176,38,255,0.15)]"
+      className="group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-bg-card transition-all duration-200 hover:border-neon-primary hover:shadow-[0_0_16px_rgba(176,38,255,0.15)]"
       aria-label={product.name}
     >
       {/* Product image */}
@@ -74,13 +74,13 @@ export function ProductCard({
           onClick={() => setDetailsOpen(true)}
           className="text-left focus-visible:outline-neon-primary"
         >
-          <h3 className="line-clamp-2 font-[family-name:var(--font-heading)] text-sm text-text-main transition-colors hover:text-neon-secondary">
+          <h3 className="line-clamp-2 min-h-[2.5rem] font-[family-name:var(--font-heading)] text-sm leading-tight text-text-main transition-colors hover:text-neon-secondary">
             {product.name}
           </h3>
         </button>
 
         {/* Price */}
-        <p className="mt-auto text-lg font-semibold text-neon-secondary">
+        <p className="text-lg font-semibold text-neon-secondary">
           {formatCurrency(product.price)}
         </p>
 
@@ -96,7 +96,7 @@ export function ProductCard({
           type="button"
           onClick={handleAdd}
           disabled={isOutOfStock}
-          className="rounded-md bg-neon-primary px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 hover:shadow-[0_0_12px_rgba(176,38,255,0.4)] focus-visible:outline-neon-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-auto rounded-md bg-neon-primary px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 hover:shadow-[0_0_12px_rgba(176,38,255,0.4)] focus-visible:outline-neon-primary disabled:cursor-not-allowed disabled:opacity-40"
           aria-disabled={isOutOfStock}
         >
           {isOutOfStock ? "Sin stock" : "Agregar al carrito"}

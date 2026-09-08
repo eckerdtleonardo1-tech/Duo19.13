@@ -13,7 +13,7 @@ function getSlidesPerView(): number {
   return 3;
 }
 
-const AUTOPLAY_INTERVAL = 3500; // ms entre avances automáticos
+const AUTOPLAY_INTERVAL = 7000; // ms entre avances automáticos
 
 // El tamaño de ventana y prefers-reduced-motion son estado del navegador, no de
 // React: useSyncExternalStore los lee sin romper la hidratación (en el server
@@ -95,7 +95,7 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
         </h2>
         <a
           href="/catalog"
-          className="text-sm text-text-muted transition-colors hover:text-neon-secondary"
+          className="shrink-0 whitespace-nowrap text-sm text-text-muted transition-colors hover:text-neon-secondary"
           aria-label="Ver todos los productos del catálogo"
         >
           Ver todos →
@@ -115,23 +115,20 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
 
         {/* Slide */}
         <div
-          className="grid gap-4"
+          key={current}
+          className={`grid items-stretch gap-5 ${
+            prefersReduced ? "" : "animate-[fadeSlide_0.5s_ease-out_both]"
+          }`}
           style={{ gridTemplateColumns: `repeat(${perView}, minmax(0, 1fr))` }}
           aria-live={prefersReduced ? "polite" : "off"}
           aria-atomic="true"
         >
           {visibleProducts.map((product, i) => (
-            <div
+            <ProductCard
               key={product.id}
-              className={
-                prefersReduced
-                  ? ""
-                  : "animate-[fadeSlide_0.35s_ease-out_both]"
-              }
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <ProductCard product={product} priority={current === 0 && i < 3} />
-            </div>
+              product={product}
+              priority={current === 0 && i < 3}
+            />
           ))}
         </div>
 
@@ -166,18 +163,6 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
               }`}
             />
           ))}
-        </div>
-      )}
-
-      {/* Barra de progreso del autoplay (solo si no hay prefers-reduced-motion) */}
-      {!prefersReduced && totalSlides > 1 && (
-        <div className="mx-auto mt-3 h-0.5 max-w-xs overflow-hidden rounded-full bg-border">
-          <div
-            key={`${current}-${isPaused}`}
-            className={`h-full rounded-full bg-neon-primary/50 ${
-              isPaused ? "" : "animate-[progress_3.5s_linear_both]"
-            }`}
-          />
         </div>
       )}
     </section>
