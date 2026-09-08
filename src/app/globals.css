@@ -26,6 +26,25 @@
   --font-body: var(--font-inter), sans-serif;
 }
 
+/* ── Carousel keyframes ──────────────────────────────────────────── */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progress {
+  from { width: 0% }
+  to   { width: 100% }
+}
+
+
+
 body {
   background: var(--color-bg-dark);
   color: var(--color-text-main);

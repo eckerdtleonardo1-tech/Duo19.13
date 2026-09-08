@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Script from "next/script";
 import { ShieldCheck, Truck, Headset, BadgeCheck } from "lucide-react";
-import { FeaturedGrid } from "@/components/products/FeaturedGrid";
+import { FeaturedCarousel } from "@/components/products/FeaturedCarousel";
 import { listProducts } from "@/lib/products";
+
 
 // Sin esto, Next.js prerenderiza "/" una sola vez en build time y los
 // destacados quedan congelados hasta el próximo deploy.
@@ -92,8 +93,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── Featured Products ── */}
-        <FeaturedGrid products={featured} />
+        {/* ── Featured Products Carousel ── */}
+        <FeaturedCarousel products={featured} />
+
 
         {/* ── Benefits ── */}
         <section aria-label="Por qué elegirnos" className="border-t border-border bg-bg-card/50">
