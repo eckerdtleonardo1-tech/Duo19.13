@@ -3,6 +3,58 @@ import { AuthError, getSessionUser, requireAdmin } from "@/lib/auth";
 import { createOrder, listOrders, OrderError } from "@/lib/orders";
 import { buildOrderMessage, buildWhatsappUrl } from "@/lib/whatsapp";
 
+// Límites de longitud para campos de texto del pedido
+const FIELD_LIMITS = {
+  customerName: 100,
+  customerPhone: 30,
+  customerEmail: 254,
+  customerAddress: 300,
+  customerProvince: 100,
+  customerCity: 100,
+} as const;
+
+// Límites de items por pedido
+const MAX_ITEMS_PER_ORDER = 50;
+const MAX_QTY_PER_ITEM = 999;
+
+function validateOrderBody(body: Record<string, unknown>): string | null {
+  if (!body?.customerName) return "El nombre es requerido";
+  if (!body?.customerPhone) return "El teléfono es requerido";
+  if (!body?.customerAddress) return "La dirección es requerida";
+  if (!body?.customerProvince) return "La provincia es requerida";
+  if (!body?.customerCity) return "La ciudad es requerida";
+  if (!Array.isArray(body?.items) || (body.items as unknown[]).length === 0)
+    return "El pedido no tiene productos";
+
+  // Validar longitudes máximas de texto
+  for (const [field, max] of Object.entries(FIELD_LIMITS)) {
+    const value = body[field];
+    if (value && typeof value === "string" && value.length > max) {
+      return `El campo "${field}" supera el máximo de ${max} caracteres`;
+    }
+  }
+
+  // Validar cantidad de items
+  const items = body.items as unknown[];
+  if (items.length > MAX_ITEMS_PER_ORDER) {
+    return `El pedido no puede tener más de ${MAX_ITEMS_PER_ORDER} productos`;
+  }
+
+  // Validar cada item
+  for (const item of items) {
+    const i = item as { productId: unknown; quantity: unknown };
+    if (!Number.isInteger(Number(i.productId)) || Number(i.productId) <= 0) {
+      return "ID de producto inválido";
+    }
+    const qty = Number(i.quantity);
+    if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY_PER_ITEM) {
+      return `La cantidad debe estar entre 1 y ${MAX_QTY_PER_ITEM}`;
+    }
+  }
+
+  return null;
+}
+
 export async function GET(request: Request) {
   try {
     await requireAdmin();
@@ -25,19 +77,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
 
-  if (
-    !body?.customerName ||
-    !body?.customerPhone ||
-    !body?.customerAddress ||
-    !body?.customerProvince ||
-    !body?.customerCity ||
-    !Array.isArray(body?.items) ||
-    body.items.length === 0
-  ) {
-    return NextResponse.json({ error: "Faltan datos del pedido" }, { status: 400 });
+  // Validación completa en un solo paso
+  const validationError = validateOrderBody(body ?? {});
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  const items = body.items.map((i: { productId: number; quantity: number }) => ({
+  const items = (body.items as { productId: number; quantity: number }[]).map((i) => ({
     productId: Number(i.productId),
     quantity: Number(i.quantity),
   }));
