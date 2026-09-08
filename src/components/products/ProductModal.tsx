@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -14,27 +14,18 @@ const formatCurrency = (value: number) =>
 
 export function ProductModal({
   product,
-  open,
   onClose,
 }: {
-  product: Product | null;
-  open: boolean;
+  product: Product;
   onClose: () => void;
 }) {
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [activeImage, setActiveImage] = useState(0);
 
-  useEffect(() => {
-    setActiveImage(0);
-  }, [product?.id]);
-
-  if (!product) return null;
-
   const images = [product.image, ...product.gallery];
 
   function handleAdd() {
-    if (!product) return;
     const result = addItem(product, 1);
     if (result.ok) {
       showToast(`${product.name} agregado al carrito`);
@@ -44,7 +35,7 @@ export function ProductModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} maxWidthClassName="max-w-3xl">
+    <Modal open onClose={onClose} maxWidthClassName="max-w-3xl">
       <div className="flex justify-end">
         <button
           onClick={onClose}

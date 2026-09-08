@@ -58,7 +58,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const prevUserId = useRef<number | null | undefined>(undefined);
   const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const syncToServer = useCallback(
+    (nextItems: CartItem[]) => {
+      if (!user) return;
+      if (syncTimeout.current) clearTimeout(syncTimeout.current);
+      syncTimeout.current = setTimeout(() => {
+        fetch("/api/cart", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cart: nextItems.map((i) => ({ productId: i.productId, qty: i.qty })),
+          }),
+        }).catch(() => {});
+      }, SYNC_DEBOUNCE_MS);
+    },
+    [user]
+  );
+
+  // El carrito guardado solo existe en el navegador: leerlo durante el render
+  // haría que el HTML del server (carrito vacío) no coincida con el del cliente.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems(loadLocalCart());
     setHydrated(true);
   }, []);
@@ -149,24 +169,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       })();
     }
-  }, [user, authLoading, hydrated]);
-
-  const syncToServer = useCallback(
-    (nextItems: CartItem[]) => {
-      if (!user) return;
-      if (syncTimeout.current) clearTimeout(syncTimeout.current);
-      syncTimeout.current = setTimeout(() => {
-        fetch("/api/cart", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cart: nextItems.map((i) => ({ productId: i.productId, qty: i.qty })),
-          }),
-        }).catch(() => {});
-      }, SYNC_DEBOUNCE_MS);
-    },
-    [user]
-  );
+  }, [user, authLoading, hydrated, syncToServer]);
 
   const addItem = useCallback(
     (product: Product, qty = 1): AddResult => {

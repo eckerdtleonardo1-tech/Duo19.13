@@ -10,7 +10,13 @@ import type { Product } from "@/types";
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  priority?: boolean;
+}) {
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -36,6 +42,7 @@ export function ProductCard({ product }: { product: Product }) {
           alt={product.name}
           fill
           unoptimized
+          priority={priority}
           className="object-cover"
         />
         {product.stock === 0 && (
@@ -65,11 +72,9 @@ export function ProductCard({ product }: { product: Product }) {
         </button>
       </div>
 
-      <ProductModal
-        product={product}
-        open={detailsOpen}
-        onClose={() => setDetailsOpen(false)}
-      />
+      {detailsOpen && (
+        <ProductModal product={product} onClose={() => setDetailsOpen(false)} />
+      )}
     </div>
   );
 }

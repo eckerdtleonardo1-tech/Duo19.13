@@ -4,13 +4,11 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { useCart } from "@/context/CartProvider";
-import { useToast } from "@/context/ToastProvider";
 import { ProvinceCitySelect } from "@/components/cart/ProvinceCitySelect";
 
 export function CheckoutForm() {
   const { user } = useAuth();
   const { items, clear } = useCart();
-  const { showToast } = useToast();
   const router = useRouter();
 
   const [name, setName] = useState(user?.name ?? "");
@@ -58,9 +56,23 @@ export function CheckoutForm() {
       }
 
       clear();
-      showToast("¡Pedido generado! Te redirigimos a WhatsApp.");
+      // El pedido ya existe en la DB: la página de confirmación deja el link de
+      // WhatsApp a mano por si el navegador bloquea este window.open (se dispara
+      // después del await, así que puede quedar fuera del gesto del usuario).
+      try {
+        window.sessionStorage.setItem(
+          "duo1913_last_order",
+          JSON.stringify({
+            orderId: data.order.id,
+            total: data.order.totalAmount,
+            whatsappUrl: data.whatsappUrl,
+          })
+        );
+      } catch {
+        // Si sessionStorage no está disponible seguimos con el window.open.
+      }
       window.open(data.whatsappUrl, "_blank");
-      router.push("/");
+      router.push("/order-confirmation");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo generar el pedido");
     } finally {

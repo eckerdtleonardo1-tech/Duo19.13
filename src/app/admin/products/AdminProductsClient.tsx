@@ -64,6 +64,7 @@ export function AdminProductsClient({ initialProducts }: { initialProducts: Prod
       {showForm && (
         <div className="mb-6">
           <ProductForm
+            key={editing?.id ?? "new"}
             product={editing}
             onSubmit={handleSubmit}
             onCancel={() => {

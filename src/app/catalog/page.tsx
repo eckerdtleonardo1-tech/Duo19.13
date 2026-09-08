@@ -14,7 +14,7 @@ export default async function CatalogPage({
       <h1 className="mb-6 font-[family-name:var(--font-heading)] text-2xl text-text-main">
         Catálogo
       </h1>
-      <CatalogClient initialProducts={products} initialCategory={category ?? "all"} />
+      <CatalogClient products={products} category={category ?? "all"} />
     </div>
   );
 }

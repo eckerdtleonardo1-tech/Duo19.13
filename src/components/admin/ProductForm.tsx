@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { resizeImageFile } from "@/lib/image";
 import { CATEGORIES, MAX_GALLERY_IMAGES } from "@/lib/constants";
 import type { Product } from "@/types";
@@ -36,26 +36,24 @@ export function ProductForm({
   onSubmit: (values: ProductFormValues) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [values, setValues] = useState<ProductFormValues>(emptyValues);
+  // El form se remonta con `key` al cambiar de producto (ver AdminProductsClient),
+  // así que alcanza con inicializar el estado una vez.
+  const [values, setValues] = useState<ProductFormValues>(
+    product
+      ? {
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          stock: product.stock,
+          image: product.image,
+          gallery: product.gallery,
+          category: product.category,
+          featured: product.featured,
+        }
+      : emptyValues
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setValues(
-      product
-        ? {
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            stock: product.stock,
-            image: product.image,
-            gallery: product.gallery,
-            category: product.category,
-            featured: product.featured,
-          }
-        : emptyValues
-    );
-  }, [product]);
 
   async function handleImageChange(file: File | undefined) {
     if (!file) return;

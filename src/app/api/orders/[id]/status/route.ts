@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth";
-import { updateOrderStatus } from "@/lib/orders";
+import { OrderError, updateOrderStatus } from "@/lib/orders";
 import { ORDER_STATUSES } from "@/lib/constants";
 
 export async function PATCH(
@@ -20,7 +20,7 @@ export async function PATCH(
     if (!order) return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
     return NextResponse.json({ order });
   } catch (err) {
-    if (err instanceof AuthError) {
+    if (err instanceof AuthError || err instanceof OrderError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
     throw err;

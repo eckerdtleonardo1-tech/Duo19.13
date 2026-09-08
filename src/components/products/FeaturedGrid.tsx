@@ -10,8 +10,8 @@ export function FeaturedGrid({ products }: { products: Product[] }) {
         Productos <span className="text-neon-primary">Destacados</span>
       </h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {products.map((product, index) => (
+          <ProductCard key={product.id} product={product} priority={index < 3} />
         ))}
       </div>
     </section>

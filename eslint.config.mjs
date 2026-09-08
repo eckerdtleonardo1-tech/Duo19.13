@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Sitio estático anterior a la migración, se conserva solo como referencia.
+    "legacy-static/**",
   ]),
 ]);
 

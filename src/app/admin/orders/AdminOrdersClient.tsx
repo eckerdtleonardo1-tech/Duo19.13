@@ -23,11 +23,11 @@ export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] })
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    const data = await res.json().catch(() => null);
     if (!res.ok) {
-      showToast("No se pudo actualizar el estado", "error");
+      showToast(data?.error ?? "No se pudo actualizar el estado", "error");
       return;
     }
-    const data = await res.json();
     setOrders((prev) => prev.map((o) => (o.id === order.id ? data.order : o)));
     showToast("Estado actualizado");
   }

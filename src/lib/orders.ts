@@ -173,12 +173,69 @@ export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
   return rows.map(mapItemRow);
 }
 
+const CANCELLED_STATUS = "Cancelado";
+
+/**
+ * Cancelar un pedido devuelve al stock lo que se había descontado al crearlo,
+ * y reactivarlo lo vuelve a descontar.
+ */
 export async function updateOrderStatus(id: number, status: string): Promise<Order | null> {
-  const { rows } = await pool.query(
-    "UPDATE orders SET status = $1, updated_at = now() WHERE id = $2 RETURNING *",
-    [status, id]
-  );
-  return rows.length ? mapOrderRow(rows[0]) : null;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const { rows: currentRows } = await client.query(
+      "SELECT status FROM orders WHERE id = $1 FOR UPDATE",
+      [id]
+    );
+    if (currentRows.length === 0) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const wasCancelled = currentRows[0].status === CANCELLED_STATUS;
+    const willBeCancelled = status === CANCELLED_STATUS;
+
+    if (wasCancelled !== willBeCancelled) {
+      const { rows: items } = await client.query(
+        `SELECT product_id, quantity FROM order_items
+         WHERE order_id = $1 AND product_id IS NOT NULL`,
+        [id]
+      );
+      const sign = willBeCancelled ? 1 : -1;
+
+      for (const item of items) {
+        const { rows: productRows } = await client.query(
+          "SELECT name, stock FROM products WHERE id = $1 FOR UPDATE",
+          [item.product_id]
+        );
+        if (productRows.length === 0) continue;
+        if (sign === -1 && productRows[0].stock < item.quantity) {
+          throw new OrderError(
+            409,
+            `No hay stock suficiente de "${productRows[0].name}" para reactivar el pedido`
+          );
+        }
+        await client.query("UPDATE products SET stock = stock + $1 WHERE id = $2", [
+          sign * item.quantity,
+          item.product_id,
+        ]);
+      }
+    }
+
+    const { rows } = await client.query(
+      "UPDATE orders SET status = $1, updated_at = now() WHERE id = $2 RETURNING *",
+      [status, id]
+    );
+
+    await client.query("COMMIT");
+    return mapOrderRow(rows[0]);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function updateOrderArchived(id: number, archived: boolean): Promise<Order | null> {
