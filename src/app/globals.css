@@ -36,6 +36,40 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom text selection colors */
+::selection {
+  background-color: rgba(176, 38, 255, 0.35);
+  color: #fff;
+}
+
+/* Keyboard focus ring — accessible & on-brand */
+:focus-visible {
+  outline: 2px solid var(--color-neon-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Consistent scrollbar */
 * {
+  scrollbar-width: thin;
   scrollbar-color: var(--color-neon-primary) var(--color-bg-card);
 }
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-neon-primary);
+  border-radius: 999px;
+}
+

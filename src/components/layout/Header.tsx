@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, ShoppingCart, User } from "lucide-react";
+import { Menu, X, ShoppingCart, User } from "lucide-react";
 import { useAuth } from "@/context/AuthProvider";
 import { useCart } from "@/context/CartProvider";
 import { LoginModal } from "@/components/auth/LoginModal";
@@ -18,36 +18,45 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg-dark/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        {/* Logo */}
         <Link
           href="/"
-          className="font-[family-name:var(--font-heading)] text-2xl font-bold text-text-main"
+          className="font-[family-name:var(--font-heading)] text-2xl font-bold text-text-main transition-colors hover:text-neon-primary"
         >
           Duo19<span className="text-neon-primary">-</span>13
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm text-text-muted md:flex">
-          <Link href="/" className="hover:text-neon-secondary">
+        {/* Desktop navigation */}
+        <nav
+          className="hidden items-center gap-6 text-sm text-text-muted md:flex"
+          aria-label="Navegación principal"
+        >
+          <Link href="/" className="transition-colors hover:text-neon-secondary">
             Inicio
           </Link>
-          <Link href="/catalog" className="hover:text-neon-secondary">
+          <Link href="/catalog" className="transition-colors hover:text-neon-secondary">
             Catálogo
           </Link>
-          <Link href="/contact" className="hover:text-neon-secondary">
+          <Link href="/contact" className="transition-colors hover:text-neon-secondary">
             Contacto
           </Link>
           {user?.isAdmin && (
-            <Link href="/admin/products" className="hover:text-neon-secondary">
+            <Link href="/admin/products" className="transition-colors hover:text-neon-secondary">
               Admin
             </Link>
           )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        {/* Right-side icons */}
+        <div className="flex items-center gap-1">
+          {/* User menu */}
           <div className="relative">
             <button
               onClick={() => (user ? setUserMenuOpen((v) => !v) : setLoginOpen(true))}
-              className="rounded-full p-2 text-text-main hover:text-neon-secondary"
-              title="Mi cuenta"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-text-main transition-colors hover:bg-white/5 hover:text-neon-secondary"
+              aria-label={user ? "Mi cuenta" : "Iniciar sesión"}
+              aria-expanded={user ? userMenuOpen : undefined}
+              aria-haspopup={user ? "true" : undefined}
             >
               <User size={20} />
             </button>
@@ -57,7 +66,7 @@ export function Header() {
                 <Link
                   href="/my-orders"
                   onClick={() => setUserMenuOpen(false)}
-                  className="block rounded px-2 py-1 text-sm hover:bg-white/5"
+                  className="block rounded px-2 py-2 text-sm transition-colors hover:bg-white/5"
                 >
                   Mis pedidos
                 </Link>
@@ -66,7 +75,7 @@ export function Header() {
                     logout();
                     setUserMenuOpen(false);
                   }}
-                  className="block w-full rounded px-2 py-1 text-left text-sm text-danger hover:bg-white/5"
+                  className="block w-full rounded px-2 py-2 text-left text-sm text-danger transition-colors hover:bg-white/5"
                 >
                   Cerrar sesión
                 </button>
@@ -74,59 +83,88 @@ export function Header() {
             )}
           </div>
 
+          {/* Cart */}
           <Link
             href="/cart"
-            className="relative rounded-full p-2 text-text-main hover:text-neon-secondary"
-            title="Carrito"
+            className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-text-main transition-colors hover:bg-white/5 hover:text-neon-secondary"
+            aria-label={`Carrito${totalItems > 0 ? `, ${totalItems} producto${totalItems !== 1 ? "s" : ""}` : ""}`}
           >
             <ShoppingCart size={20} />
             {totalItems > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-neon-primary text-xs text-white">
-                {totalItems}
+              <span
+                aria-hidden="true"
+                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-neon-primary text-xs font-bold text-white"
+              >
+                {totalItems > 99 ? "99+" : totalItems}
               </span>
             )}
           </Link>
 
+          {/* Hamburger button — mobile only */}
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-full p-2 text-text-main hover:text-neon-secondary md:hidden"
-            title="Menú"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-text-main transition-colors hover:bg-white/5 hover:text-neon-secondary md:hidden"
+            aria-label={menuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
+            aria-controls="mobile-nav"
+            aria-expanded={menuOpen}
           >
-            <Menu size={20} />
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {menuOpen && (
-        <div className="border-t border-border px-4 py-3 md:hidden">
-          <nav className="flex flex-col gap-2 text-sm text-text-muted">
-            <Link href="/" onClick={() => setMenuOpen(false)}>
-              Inicio
+      {/* Mobile navigation drawer — animated with CSS, not JS mount/unmount */}
+      <div
+        id="mobile-nav"
+        role="navigation"
+        aria-label="Navegación móvil"
+        className={`overflow-hidden border-t border-border transition-all duration-200 md:hidden ${
+          menuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <nav className="flex flex-col gap-1 px-4 py-3 text-sm text-text-muted">
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            className="rounded-lg px-3 py-2.5 font-medium transition-colors hover:bg-white/5 hover:text-text-main"
+          >
+            Inicio
+          </Link>
+          <Link
+            href="/catalog"
+            onClick={() => setMenuOpen(false)}
+            className="rounded-lg px-3 py-2.5 font-medium transition-colors hover:bg-white/5 hover:text-text-main"
+          >
+            Catálogo
+          </Link>
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.value}
+              href={`/catalog?category=${c.value}`}
+              onClick={() => setMenuOpen(false)}
+              className="rounded-lg pl-7 pr-3 py-2 text-xs transition-colors hover:bg-white/5 hover:text-neon-secondary"
+            >
+              {c.label}
             </Link>
-            <Link href="/catalog" onClick={() => setMenuOpen(false)}>
-              Catálogo
+          ))}
+          <Link
+            href="/contact"
+            onClick={() => setMenuOpen(false)}
+            className="rounded-lg px-3 py-2.5 font-medium transition-colors hover:bg-white/5 hover:text-text-main"
+          >
+            Contacto
+          </Link>
+          {user?.isAdmin && (
+            <Link
+              href="/admin/products"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-lg px-3 py-2.5 font-medium text-neon-primary transition-colors hover:bg-white/5"
+            >
+              Admin
             </Link>
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.value}
-                href={`/catalog?category=${c.value}`}
-                onClick={() => setMenuOpen(false)}
-                className="pl-3 text-xs"
-              >
-                {c.label}
-              </Link>
-            ))}
-            <Link href="/contact" onClick={() => setMenuOpen(false)}>
-              Contacto
-            </Link>
-            {user?.isAdmin && (
-              <Link href="/admin/products" onClick={() => setMenuOpen(false)}>
-                Admin
-              </Link>
-            )}
-          </nav>
-        </div>
-      )}
+          )}
+        </nav>
+      </div>
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </header>
