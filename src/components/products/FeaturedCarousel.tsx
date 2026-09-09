@@ -107,12 +107,6 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
   // ── Dot indicador: índice real (normalizado al [0, total)) ───────────────────
   const dotIndex = ((index % total) + total) % total;
 
-  // ── Offset en % del track completo ──────────────────────────────────────────
-  // Cada "columna" ocupa (100 / perView)% del contenedor visible.
-  // El track completo tiene `cloned.length` columnas.
-  const colWidth = 100 / perView;
-  const offsetPercent = -(index * colWidth);
-
   return (
     <section
       className="mx-auto max-w-6xl px-4 py-14"
@@ -171,9 +165,9 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
             onTransitionEnd={onTransitionEnd}
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${cloned.length}, calc(${colWidth}% - ${(perView - 1) * 20 / perView}px))`,
+              gridTemplateColumns: `repeat(${cloned.length}, calc(${100 / perView}% - ${(perView - 1) * 20 / perView}px))`,
               gap: "20px",
-              transform: `translateX(calc(${offsetPercent}% - ${index * 20 * (1 / perView)}px + ${index * 20 / perView}px))`,
+              transform: `translateX(calc(-${index} * (100% + 20px) / ${perView}))`,
               transition:
                 transitioning && !reduced
                   ? `transform ${TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`
