@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -14,6 +15,17 @@ export function Modal({
   children: ReactNode;
   maxWidthClassName?: string;
 }) {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
   if (!open) return null;
 
   // Portal al body: si el modal quedara anidado dentro de un ancestro con
