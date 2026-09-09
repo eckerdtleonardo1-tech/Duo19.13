@@ -172,8 +172,9 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
         </button>
 
         {/* Overflow clip + swipe touch area */}
+        {/* NOTA: py-6 -my-6 px-4 -mx-4 evita que el overflow-hidden corte el resplandor y el movimiento de la tarjeta al hacer hover */}
         <div
-          className="overflow-hidden"
+          className="overflow-hidden py-6 -my-6 px-4 -mx-4"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           style={{ touchAction: "pan-y" }}
