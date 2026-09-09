@@ -47,6 +47,9 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
   const [paused, setPaused] = useState(false);
   const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
 
   // ── Navegación ──────────────────────────────────────────────────────────────
   const goTo = useCallback((next: number) => {
@@ -73,6 +76,31 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
     autoRef.current = setTimeout(advance, AUTOPLAY_MS);
     return () => { if (autoRef.current) clearTimeout(autoRef.current); };
   }, [index, paused, reduced, total, advance]);
+
+  // ── Touch / Swipe ────────────────────────────────────────────────────────────
+  const SWIPE_THRESHOLD = 40; // px mínimos horizontales para contar como swipe
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setPaused(true);
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    // Solo contar como swipe si el movimiento es más horizontal que vertical
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
+      if (dx < 0) advance(); // desliza a la izquierda → siguiente
+      else         retreat(); // desliza a la derecha → anterior
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setPaused(false);
+  }
+
+
 
   if (products.length === 0) return null;
 
@@ -121,17 +149,22 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-bg-dark to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-bg-dark to-transparent" />
 
-        {/* Prev arrow */}
+        {/* Prev arrow — solo visible en desktop */}
         <button
           onClick={retreat}
           aria-label="Slide anterior"
-          className="absolute -left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-bg-card text-text-muted shadow-xl transition-all hover:border-neon-primary hover:text-neon-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-primary sm:-left-5"
+          className="absolute -left-4 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-bg-card text-text-muted shadow-xl transition-all hover:border-neon-primary hover:text-neon-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-primary sm:flex sm:-left-5"
         >
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
 
-        {/* Overflow clip */}
-        <div className="overflow-hidden">
+        {/* Overflow clip + swipe touch area */}
+        <div
+          className="overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          style={{ touchAction: "pan-y" }}
+        >
           {/* Sliding track — width proportional to number of cloned items */}
           <div
             ref={trackRef}
@@ -161,11 +194,11 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
           </div>
         </div>
 
-        {/* Next arrow */}
+        {/* Next arrow — solo visible en desktop */}
         <button
           onClick={advance}
           aria-label="Slide siguiente"
-          className="absolute -right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-bg-card text-text-muted shadow-xl transition-all hover:border-neon-primary hover:text-neon-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-primary sm:-right-5"
+          className="absolute -right-4 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-bg-card text-text-muted shadow-xl transition-all hover:border-neon-primary hover:text-neon-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-primary sm:flex sm:-right-5"
         >
           <ChevronRight size={20} aria-hidden="true" />
         </button>
