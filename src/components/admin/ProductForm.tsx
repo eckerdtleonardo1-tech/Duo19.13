@@ -123,8 +123,8 @@ export function ProductForm({
             required
             min={0}
             step="0.01"
-            value={values.price}
-            onChange={(e) => setValues((v) => ({ ...v, price: Number(e.target.value) }))}
+            value={values.price === 0 ? "" : values.price}
+            onChange={(e) => setValues((v) => ({ ...v, price: e.target.value === "" ? 0 : Number(e.target.value) }))}
             className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
           />
         </div>
@@ -134,8 +134,8 @@ export function ProductForm({
             type="number"
             required
             min={0}
-            value={values.stock}
-            onChange={(e) => setValues((v) => ({ ...v, stock: Number(e.target.value) }))}
+            value={values.stock === 0 ? "" : values.stock}
+            onChange={(e) => setValues((v) => ({ ...v, stock: e.target.value === "" ? 0 : Number(e.target.value) }))}
             className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
           />
         </div>
@@ -171,11 +171,11 @@ export function ProductForm({
           type="file"
           accept="image/*"
           onChange={(e) => handleImageChange(e.target.files?.[0])}
-          className="w-full text-sm"
+          className="block w-full text-sm text-text-muted file:mr-4 file:cursor-pointer file:rounded-md file:border file:border-border file:bg-bg-dark file:px-4 file:py-2 file:text-sm file:font-medium file:text-text-main file:transition-colors hover:file:border-neon-secondary hover:file:text-neon-secondary"
         />
         {values.image && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={values.image} alt="preview" className="mt-2 h-24 w-24 rounded object-cover" />
+          <img src={values.image} alt="preview" className="mt-2 h-24 w-24 rounded border border-border object-cover" />
         )}
       </div>
 
@@ -188,13 +188,13 @@ export function ProductForm({
           accept="image/*"
           multiple
           onChange={(e) => handleGalleryChange(e.target.files)}
-          className="w-full text-sm"
+          className="block w-full text-sm text-text-muted file:mr-4 file:cursor-pointer file:rounded-md file:border file:border-border file:bg-bg-dark file:px-4 file:py-2 file:text-sm file:font-medium file:text-text-main file:transition-colors hover:file:border-neon-secondary hover:file:text-neon-secondary"
         />
         {values.gallery.length > 0 && (
           <div className="mt-2 flex gap-2">
             {values.gallery.map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={src} alt="" className="h-16 w-16 rounded object-cover" />
+              <img key={i} src={src} alt="" className="h-16 w-16 rounded border border-border object-cover" />
             ))}
           </div>
         )}

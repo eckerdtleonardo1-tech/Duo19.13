@@ -45,6 +45,28 @@ export function AdminProductsClient({ initialProducts }: { initialProducts: Prod
     showToast("Producto eliminado");
   }
 
+  async function handleToggleFeatured(product: Product) {
+    const updatedValues = { ...product, featured: !product.featured };
+    
+    // Solo enviamos los datos básicos para actualizar
+    const res = await fetch(`/api/products/${product.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedValues),
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error ?? "Error al actualizar estado destacado", "error");
+      return;
+    }
+
+    setProducts((prev) =>
+      prev.map((p) => (p.id === data.product.id ? data.product : p))
+    );
+    showToast(data.product.featured ? "Marcado como destacado" : "Quitado de destacados");
+  }
+
   return (
     <div>
       <div className="mb-4 flex justify-end">
@@ -82,6 +104,7 @@ export function AdminProductsClient({ initialProducts }: { initialProducts: Prod
           setShowForm(true);
         }}
         onDelete={handleDelete}
+        onToggleFeatured={handleToggleFeatured}
       />
     </div>
   );
