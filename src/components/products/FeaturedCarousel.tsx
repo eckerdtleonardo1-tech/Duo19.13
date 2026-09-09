@@ -61,7 +61,9 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
   const retreat = useCallback(() => goTo(index - 1), [index, goTo]);
 
   // Al terminar la transición, si estamos en un clon extremo saltamos sin animación
-  const onTransitionEnd = useCallback(() => {
+  const onTransitionEnd = useCallback((e: React.TransitionEvent) => {
+    // IMPORTANTE: Ignorar eventos transitionend que burbujean desde los hijos (ej: hover en las cards)
+    if (e.target !== trackRef.current) return;
     setTransitioning(false);
     setIndex((i) => {
       if (i >= total * 2) return i - total; // clon derecho → posición real
@@ -69,6 +71,21 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
       return i;
     });
   }, [total]);
+
+  // Fallback de seguridad: si la pestaña está en segundo plano, el navegador puede
+  // no disparar transitionend. Forzamos el cierre de la transición.
+  useEffect(() => {
+    if (!transitioning) return;
+    const timer = setTimeout(() => {
+      setTransitioning(false);
+      setIndex((i) => {
+        if (i >= total * 2) return i - total;
+        if (i < total) return i + total;
+        return i;
+      });
+    }, TRANSITION_MS + 50);
+    return () => clearTimeout(timer);
+  }, [transitioning, total]);
 
   // ── Autoplay ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -112,10 +129,6 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
       className="mx-auto max-w-6xl px-4 py-14"
       aria-labelledby="featured-heading"
       aria-roledescription="carrusel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
     >
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="mb-8 flex items-end justify-between">
@@ -138,7 +151,13 @@ export function FeaturedCarousel({ products }: { products: Product[] }) {
       </div>
 
       {/* ── Track wrapper ───────────────────────────────────────────────── */}
-      <div className="relative">
+      <div
+        className="relative"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
         {/* Fade masks on edges */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-bg-dark to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-bg-dark to-transparent" />
