@@ -30,13 +30,17 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [catalogMenuOpen, setCatalogMenuOpen] = useState(false);
+  const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const catalogMenuRef = useRef<HTMLDivElement>(null);
 
   // Close mobile menu on route change
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    setMobileOpen(false);
+    setMobileCategoriesOpen(false);
+  }, [pathname]);
 
   // Focus search input when opened
   useEffect(() => {
@@ -304,16 +308,44 @@ export function Header() {
             </form>
 
             <Link href="/" className="block rounded-lg px-3 py-2.5 text-sm text-text-muted transition-colors hover:bg-bg-card hover:text-text-main">Inicio</Link>
-            <Link href="/catalog" className="block rounded-lg px-3 py-2.5 text-sm text-text-muted transition-colors hover:bg-bg-card hover:text-text-main">Catálogo</Link>
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.value}
-                href={`/catalog?category=${c.value}`}
-                className="block rounded-lg py-2 pl-7 pr-3 text-xs text-text-muted transition-colors hover:bg-bg-card hover:text-neon-secondary"
-              >
-                {c.label}
-              </Link>
-            ))}
+            
+            <button
+              onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm text-text-muted transition-colors hover:bg-bg-card hover:text-text-main"
+            >
+              Catálogo
+              <ChevronDown
+                size={16}
+                className={`transition-transform duration-200 ${mobileCategoriesOpen ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-300 ${
+                mobileCategoriesOpen ? "max-h-96" : "max-h-0"
+              }`}
+            >
+              <div className="flex flex-col gap-1 py-1 pl-4 border-l border-border/50 ml-3 mb-1">
+                <Link
+                  href="/catalog"
+                  onClick={() => { setMobileOpen(false); setMobileCategoriesOpen(false); }}
+                  className="block rounded-lg py-2 px-3 text-sm text-text-main transition-colors hover:bg-bg-card hover:text-neon-secondary font-medium"
+                >
+                  Todos los productos
+                </Link>
+                {CATEGORIES.map((c) => (
+                  <Link
+                    key={c.value}
+                    href={`/catalog?category=${c.value}`}
+                    onClick={() => { setMobileOpen(false); setMobileCategoriesOpen(false); }}
+                    className="block rounded-lg py-1.5 px-3 text-xs text-text-muted transition-colors hover:bg-bg-card hover:text-neon-secondary"
+                  >
+                    {c.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             <Link href="/contact" className="block rounded-lg px-3 py-2.5 text-sm text-text-muted transition-colors hover:bg-bg-card hover:text-text-main">Contacto</Link>
 
             <div className="mt-2 border-t border-border pt-3">
