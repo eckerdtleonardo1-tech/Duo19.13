@@ -353,7 +353,14 @@ export function Header() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-text-main">{user.name}</p>
-                    <Link href="/my-orders" className="text-xs text-text-muted hover:text-neon-secondary">Mis pedidos</Link>
+                    <div className="mt-1 flex gap-3">
+                      <Link href="/my-orders" className="text-xs text-text-muted hover:text-neon-secondary">Mis pedidos</Link>
+                      {user.isAdmin && (
+                        <Link href="/admin" className="text-xs text-neon-primary hover:text-neon-primary/80 font-medium">
+                          Panel admin
+                        </Link>
+                      )}
+                    </div>
                   </div>
                   <button onClick={() => logout()} className="text-sm text-danger hover:opacity-80">
                     Salir
