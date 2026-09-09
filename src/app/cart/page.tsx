@@ -47,50 +47,51 @@ export default function CartPage() {
           {items.map((item) => (
             <div
               key={item.productId}
-              className="flex items-center gap-4 rounded-xl border border-border bg-bg-card p-4 transition-all hover:border-border/80"
+              className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between rounded-xl border border-border bg-bg-card p-4 transition-all hover:border-border/80"
             >
-              {/* Thumbnail */}
-              <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-bg-dark">
-                <Image src={item.image} alt={item.name} fill unoptimized className="object-cover" />
+              {/* Product Info (Image + Title) */}
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-bg-dark">
+                  <Image src={item.image} alt={item.name} fill unoptimized className="object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-sm font-medium leading-tight text-text-main">{item.name}</p>
+                  <p className="mt-1 text-sm font-semibold text-neon-secondary">{fmt(item.price)}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    Subtotal: <span className="text-text-main font-medium">{fmt(item.price * item.qty)}</span>
+                  </p>
+                </div>
               </div>
 
-              {/* Info */}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-text-main">{item.name}</p>
-                <p className="mt-0.5 text-sm text-neon-secondary">{fmt(item.price)}</p>
-                <p className="mt-0.5 text-xs text-text-muted">
-                  Subtotal: <span className="text-text-main font-medium">{fmt(item.price * item.qty)}</span>
-                </p>
-              </div>
+              {/* Controls (Qty + Remove) */}
+              <div className="flex items-center justify-between sm:justify-end gap-4 border-t border-border/50 sm:border-0 pt-3 sm:pt-0">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setQty(item.productId, item.qty - 1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-bg-dark text-text-muted transition-colors hover:border-neon-primary hover:text-neon-primary"
+                    aria-label="Disminuir cantidad"
+                  >
+                    <Minus size={13} />
+                  </button>
+                  <span className="w-6 text-center text-sm font-medium text-text-main">{item.qty}</span>
+                  <button
+                    onClick={() => setQty(item.productId, item.qty + 1)}
+                    disabled={item.qty >= item.stock}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-bg-dark text-text-muted transition-colors hover:border-neon-primary hover:text-neon-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Aumentar cantidad"
+                  >
+                    <Plus size={13} />
+                  </button>
+                </div>
 
-              {/* Qty controls */}
-              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setQty(item.productId, item.qty - 1)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-bg-dark text-text-muted transition-colors hover:border-neon-primary hover:text-neon-primary"
-                  aria-label="Disminuir cantidad"
+                  onClick={() => removeItem(item.productId)}
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+                  aria-label={`Eliminar ${item.name}`}
                 >
-                  <Minus size={13} />
-                </button>
-                <span className="w-8 text-center text-sm font-medium text-text-main">{item.qty}</span>
-                <button
-                  onClick={() => setQty(item.productId, item.qty + 1)}
-                  disabled={item.qty >= item.stock}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-bg-dark text-text-muted transition-colors hover:border-neon-primary hover:text-neon-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Aumentar cantidad"
-                >
-                  <Plus size={13} />
+                  <Trash2 size={16} />
                 </button>
               </div>
-
-              {/* Remove */}
-              <button
-                onClick={() => removeItem(item.productId)}
-                className="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
-                aria-label={`Eliminar ${item.name}`}
-              >
-                <Trash2 size={15} />
-              </button>
             </div>
           ))}
 
