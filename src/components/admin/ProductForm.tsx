@@ -52,6 +52,12 @@ export function ProductForm({
         }
       : emptyValues
   );
+  
+  // Para manejar categorías dinámicas
+  const isCustomCategory = product && !CATEGORIES.some(c => c.value === product.category);
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState(isCustomCategory ? product.category : "");
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,9 +81,17 @@ export function ProductForm({
       setError("La imagen principal es requerida");
       return;
     }
+    
+    // Si eligió una nueva categoría pero la dejó vacía
+    if (isAddingNewCategory && !newCategoryName.trim()) {
+      setError("Escribí el nombre de la nueva categoría");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await onSubmit(values);
+      const finalCategory = isAddingNewCategory ? newCategoryName.trim() : values.category;
+      await onSubmit({ ...values, category: finalCategory });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar el producto");
     } finally {
@@ -144,8 +158,15 @@ export function ProductForm({
       <div>
         <label className="mb-1 block text-sm text-text-muted">Categoría</label>
         <select
-          value={values.category}
-          onChange={(e) => setValues((v) => ({ ...v, category: e.target.value }))}
+          value={isAddingNewCategory ? "NEW_CATEGORY" : values.category}
+          onChange={(e) => {
+            if (e.target.value === "NEW_CATEGORY") {
+              setIsAddingNewCategory(true);
+            } else {
+              setIsAddingNewCategory(false);
+              setValues((v) => ({ ...v, category: e.target.value }));
+            }
+          }}
           className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
         >
           {CATEGORIES.map((c) => (
@@ -153,7 +174,26 @@ export function ProductForm({
               {c.label}
             </option>
           ))}
+          {/* Si el producto tiene una categoría personalizada ya guardada */}
+          {isCustomCategory && !isAddingNewCategory && (
+            <option value={product.category}>{product.category}</option>
+          )}
+          <option value="NEW_CATEGORY">+ Agregar nueva categoría...</option>
         </select>
+        
+        {isAddingNewCategory && (
+          <div className="mt-3 border-l-2 border-neon-primary pl-3">
+            <label className="mb-1 block text-xs text-text-muted">Nombre de la nueva categoría</label>
+            <input
+              type="text"
+              required
+              value={newCategoryName}
+              placeholder="Ej: Monitores, Cables, etc."
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-primary"
+            />
+          </div>
+        )}
       </div>
 
       <label className="flex items-center gap-2 text-sm text-text-muted">

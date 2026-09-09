@@ -18,6 +18,13 @@ function mapRow(row: Record<string, unknown>): Product {
   };
 }
 
+export async function getUniqueCategories(): Promise<string[]> {
+  const { rows } = await pool.query(
+    "SELECT DISTINCT category FROM products WHERE category IS NOT NULL ORDER BY category"
+  );
+  return rows.map((r) => r.category as string);
+}
+
 export interface ProductFilters {
   category?: string;
   featured?: boolean;

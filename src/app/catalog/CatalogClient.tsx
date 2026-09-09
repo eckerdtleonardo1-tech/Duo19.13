@@ -18,9 +18,11 @@ const SORT_OPTIONS = [
 export function CatalogClient({
   products,
   category,
+  dbCategories = [],
 }: {
   products: Product[];
   category: string;
+  dbCategories?: string[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -65,7 +67,7 @@ export function CatalogClient({
             className="w-full rounded-lg border border-border bg-bg-card py-2.5 pl-9 pr-3 text-sm text-text-main outline-none transition-colors focus:border-neon-secondary placeholder:text-text-muted/60"
           />
         </div>
-        <CategoryFilter value={category} onChange={handleCategoryChange} />
+        <CategoryFilter value={category} onChange={handleCategoryChange} dbCategories={dbCategories} />
         {/* Sort */}
         <div className="relative flex items-center">
           <SlidersHorizontal size={14} className="pointer-events-none absolute left-3 text-text-muted" />

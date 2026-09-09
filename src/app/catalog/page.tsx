@@ -1,5 +1,5 @@
 import { CatalogClient } from "@/app/catalog/CatalogClient";
-import { listProducts } from "@/lib/products";
+import { listProducts, getUniqueCategories } from "@/lib/products";
 import { categoryLabel } from "@/lib/constants";
 
 export default async function CatalogPage({
@@ -9,6 +9,7 @@ export default async function CatalogPage({
 }) {
   const { category } = await searchParams;
   const products = await listProducts({ category });
+  const dbCategories = await getUniqueCategories();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -28,7 +29,7 @@ export default async function CatalogPage({
           {products.length} producto{products.length !== 1 ? "s" : ""} disponible{products.length !== 1 ? "s" : ""}
         </p>
       </div>
-      <CatalogClient products={products} category={category ?? "all"} />
+      <CatalogClient products={products} category={category ?? "all"} dbCategories={dbCategories} />
     </div>
   );
 }

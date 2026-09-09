@@ -8,7 +8,7 @@ export interface Product {
   stock: number;
   image: string;
   gallery: string[];
-  category: CategoryValue;
+  category: string;
   featured: boolean;
   createdAt: string;
   updatedAt: string;
