@@ -15,6 +15,7 @@ export function CheckoutForm() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState(user?.email ?? "");
   const [address, setAddress] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -46,6 +47,7 @@ export function CheckoutForm() {
           customerAddress: address,
           customerProvince: province,
           customerCity: city,
+          customerPostalCode: postalCode,
           items: items.map((i) => ({ productId: i.productId, quantity: i.qty })),
         }),
       });
@@ -117,15 +119,27 @@ export function CheckoutForm() {
           />
         </div>
       </div>
-      <div>
-        <label className="mb-1 block text-sm text-text-muted">Domicilio</label>
-        <input
-          type="text"
-          required
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 text-text-main outline-none focus:border-neon-secondary"
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_120px]">
+        <div>
+          <label className="mb-1 block text-sm text-text-muted">Domicilio</label>
+          <input
+            type="text"
+            required
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 text-text-main outline-none focus:border-neon-secondary"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm text-text-muted">C. Postal</label>
+          <input
+            type="text"
+            required
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 text-text-main outline-none focus:border-neon-secondary"
+          />
+        </div>
       </div>
       <ProvinceCitySelect
         province={province}

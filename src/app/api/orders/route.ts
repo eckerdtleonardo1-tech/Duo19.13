@@ -11,6 +11,7 @@ const FIELD_LIMITS = {
   customerAddress: 300,
   customerProvince: 100,
   customerCity: 100,
+  customerPostalCode: 20,
 } as const;
 
 // Límites de items por pedido
@@ -23,6 +24,7 @@ function validateOrderBody(body: Record<string, unknown>): string | null {
   if (!body?.customerAddress) return "La dirección es requerida";
   if (!body?.customerProvince) return "La provincia es requerida";
   if (!body?.customerCity) return "La ciudad es requerida";
+  if (!body?.customerPostalCode) return "El código postal es requerido";
   if (!Array.isArray(body?.items) || (body.items as unknown[]).length === 0)
     return "El pedido no tiene productos";
 
@@ -99,14 +101,21 @@ export async function POST(request: Request) {
       customerAddress: body.customerAddress,
       customerProvince: body.customerProvince,
       customerCity: body.customerCity,
+      customerPostalCode: body.customerPostalCode,
       items,
     });
 
-    const message = buildOrderMessage(
-      body.customerName,
-      createdItems.map((i) => ({ name: i.productName, quantity: i.quantity, subtotal: i.subtotal })),
-      order.totalAmount
-    );
+    const message = buildOrderMessage({
+      customerName: body.customerName,
+      customerPhone: body.customerPhone,
+      customerEmail: body.customerEmail,
+      customerAddress: body.customerAddress,
+      customerProvince: body.customerProvince,
+      customerCity: body.customerCity,
+      customerPostalCode: body.customerPostalCode,
+      items: createdItems.map((i) => ({ name: i.productName, quantity: i.quantity, subtotal: i.subtotal })),
+      total: order.totalAmount
+    });
 
     return NextResponse.json(
       { order, whatsappUrl: buildWhatsappUrl(message) },

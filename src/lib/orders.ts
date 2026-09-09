@@ -12,6 +12,7 @@ function mapOrderRow(row: Record<string, unknown>): Order {
     customerAddress: row.customer_address as string,
     customerProvince: row.customer_province as string,
     customerCity: row.customer_city as string,
+    customerPostalCode: (row.customer_postal_code as string) ?? null,
     totalAmount: Number(row.total_amount),
     status: row.status as OrderStatus,
     archived: row.archived as boolean,
@@ -46,6 +47,7 @@ export interface CreateOrderInput {
   customerAddress: string;
   customerProvince: string;
   customerCity: string;
+  customerPostalCode?: string | null;
   items: { productId: number; quantity: number }[];
 }
 
@@ -95,8 +97,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
     const { rows: orderRows } = await client.query(
       `INSERT INTO orders
         (user_id, customer_name, customer_phone, customer_email, customer_address,
-         customer_province, customer_city, total_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         customer_province, customer_city, customer_postal_code, total_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         input.userId,
@@ -106,6 +108,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
         input.customerAddress,
         input.customerProvince,
         input.customerCity,
+        input.customerPostalCode || null,
         total,
       ]
     );

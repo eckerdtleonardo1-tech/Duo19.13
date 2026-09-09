@@ -47,6 +47,7 @@ export interface Order {
   customerAddress: string;
   customerProvince: string;
   customerCity: string;
+  customerPostalCode?: string | null;
   totalAmount: number;
   status: OrderStatus;
   archived: boolean;
