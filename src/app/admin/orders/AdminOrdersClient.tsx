@@ -4,6 +4,7 @@ import { useState } from "react";
 import { OrdersTable } from "@/components/admin/OrdersTable";
 import { PdfReportButton } from "@/components/admin/PdfReportButton";
 import { useToast } from "@/context/ToastProvider";
+import { ORDER_STATUSES } from "@/lib/constants";
 import type { Order } from "@/types";
 
 export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] }) {
@@ -46,9 +47,23 @@ export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] })
     showToast(order.archived ? "Pedido desarchivado" : "Pedido archivado");
   }
 
+  const [activeTab, setActiveTab] = useState<string>("Todos");
+
+  // Agrupar pedidos
+  const filteredOrders = activeTab === "Todos" 
+    ? orders 
+    : orders.filter((o) => o.status === activeTab);
+
+  // Calcular contadores por estado para las pestañas
+  const counts = orders.reduce((acc, order) => {
+    acc[order.status] = (acc[order.status] || 0) + 1;
+    acc["Todos"] = (acc["Todos"] || 0) + 1;
+    return acc;
+  }, { "Todos": 0 } as Record<string, number>);
+
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
@@ -60,14 +75,43 @@ export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] })
           />
           Mostrar archivados
         </label>
-        <PdfReportButton orders={orders} />
+        <PdfReportButton orders={filteredOrders} />
       </div>
 
-      {orders.length === 0 ? (
-        <p className="text-text-muted">No hay pedidos para mostrar.</p>
+      {/* TABS */}
+      <div className="mb-6 flex overflow-x-auto border-b border-border hide-scrollbar">
+        {["Todos", ...ORDER_STATUSES].map((status) => {
+          const count = counts[status] || 0;
+          return (
+            <button
+              key={status}
+              onClick={() => setActiveTab(status)}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === status
+                  ? "border-neon-primary text-neon-primary"
+                  : "border-transparent text-text-muted hover:text-text-main"
+              }`}
+            >
+              {status}
+              <span className={`rounded-full px-2 py-0.5 text-xs ${
+                activeTab === status 
+                  ? "bg-neon-primary/20 text-neon-primary" 
+                  : "bg-bg-dark text-text-muted"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {filteredOrders.length === 0 ? (
+        <p className="text-text-muted py-8 text-center bg-bg-card rounded-lg border border-border">
+          No hay pedidos para el estado "{activeTab}".
+        </p>
       ) : (
         <OrdersTable
-          orders={orders}
+          orders={filteredOrders}
           onStatusChange={handleStatusChange}
           onArchiveToggle={handleArchiveToggle}
         />

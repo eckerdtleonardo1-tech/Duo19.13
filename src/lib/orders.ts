@@ -153,7 +153,15 @@ export async function listOrders(filters: { status?: string; archived?: boolean 
     `SELECT * FROM orders ${where} ORDER BY created_at DESC`,
     values
   );
-  return rows.map(mapOrderRow);
+  
+  const orders = rows.map(mapOrderRow);
+  
+  // Agregar items a cada pedido (necesario para el recibo individual del admin)
+  for (const order of orders) {
+    order.items = await getOrderItems(order.id);
+  }
+  
+  return orders;
 }
 
 export async function listOrdersForUser(userId: number): Promise<Order[]> {

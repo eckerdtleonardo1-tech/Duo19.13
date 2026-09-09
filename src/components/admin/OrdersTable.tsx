@@ -2,6 +2,7 @@
 
 import { ORDER_STATUSES } from "@/lib/constants";
 import type { Order } from "@/types";
+import { OrderReceiptButton } from "./OrderReceiptButton";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
@@ -68,12 +69,15 @@ export function OrdersTable({
               </td>
               <td className="p-3 text-xs text-text-muted">{formatDate(order.createdAt)}</td>
               <td className="p-3">
-                <button
-                  onClick={() => onArchiveToggle(order)}
-                  className="rounded border border-border px-2 py-1 text-xs hover:border-neon-secondary"
-                >
-                  {order.archived ? "Desarchivar" : "Archivar"}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => onArchiveToggle(order)}
+                    className="rounded border border-border px-2 py-1 text-xs hover:border-neon-secondary"
+                  >
+                    {order.archived ? "Desarchivar" : "Archivar"}
+                  </button>
+                  <OrderReceiptButton order={order} />
+                </div>
               </td>
             </tr>
           ))}
