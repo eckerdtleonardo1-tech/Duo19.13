@@ -39,11 +39,15 @@ export async function POST(request: Request) {
 
   await recordPasswordResetAttempt(ip);
 
+  let demoUrl: string | undefined;
+
   const reset = await createResetToken(email);
   if (reset) {
     const resetUrl = `${getBaseUrl(request)}/reset-password?token=${reset.token}`;
     const { text, html } = buildPasswordResetEmail(reset.user.name, resetUrl);
+    
     try {
+      // Esto va a loguear a la consola si no hay SMTP
       await sendMail(
         reset.user.email,
         `Restablecer tu contraseña — ${BUSINESS_NAME}`,
@@ -51,10 +55,14 @@ export async function POST(request: Request) {
         text
       );
     } catch (err) {
-      // No se expone al cliente: el token ya existe y el usuario puede reintentar.
       console.error("No se pudo enviar el mail de recuperación:", err);
+    }
+
+    // Si no hay SMTP configurado, mandamos el link al frontend para no bloquear la demo
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      demoUrl = resetUrl;
     }
   }
 
-  return NextResponse.json(GENERIC_RESPONSE);
+  return NextResponse.json({ ...GENERIC_RESPONSE, demoUrl });
 }
