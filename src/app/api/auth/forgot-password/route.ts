@@ -39,15 +39,22 @@ export async function POST(request: Request) {
 
   await recordPasswordResetAttempt(ip);
 
-  let demoUrl: string | undefined;
-
   const reset = await createResetToken(email);
   if (reset) {
     const resetUrl = `${getBaseUrl(request)}/reset-password?token=${reset.token}`;
     const { text, html } = buildPasswordResetEmail(reset.user.name, resetUrl);
     
+    // Si no hay SMTP configurado, lanzamos un error en lugar de pretender que se envió.
+    // NUNCA debemos devolver el link al cliente por seguridad.
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error("CRÍTICO: Intento de reseteo de contraseña sin SMTP configurado.");
+      return NextResponse.json(
+        { error: "El sistema de correos no está configurado. Contactá al soporte." },
+        { status: 500 }
+      );
+    }
+
     try {
-      // Esto va a loguear a la consola si no hay SMTP
       await sendMail(
         reset.user.email,
         `Restablecer tu contraseña — ${BUSINESS_NAME}`,
@@ -57,12 +64,7 @@ export async function POST(request: Request) {
     } catch (err) {
       console.error("No se pudo enviar el mail de recuperación:", err);
     }
-
-    // Si no hay SMTP configurado, mandamos el link al frontend para no bloquear la demo
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      demoUrl = resetUrl;
-    }
   }
 
-  return NextResponse.json({ ...GENERIC_RESPONSE, demoUrl });
+  return NextResponse.json(GENERIC_RESPONSE);
 }

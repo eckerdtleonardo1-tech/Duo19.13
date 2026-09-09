@@ -9,7 +9,6 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [demoUrl, setDemoUrl] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -24,7 +23,6 @@ export default function ForgotPasswordPage() {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? "No se pudo procesar el pedido");
       
-      if (data?.demoUrl) setDemoUrl(data.demoUrl);
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo procesar el pedido");
@@ -44,27 +42,9 @@ export default function ForgotPasswordPage() {
           Si <span className="text-text-main">{email}</span> está registrado, te
           llegó un link para elegir una contraseña nueva. Vence en 1 hora.
         </p>
-
-        {demoUrl ? (
-          <div className="mt-6 rounded-lg border border-neon-secondary/40 bg-neon-secondary/10 p-4 text-left">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-neon-secondary">
-              Modo Demo (Sin SMTP)
-            </p>
-            <p className="mb-3 text-sm text-text-muted">
-              Como no hay un servidor de correos configurado, acá tenés el link de recuperación directo:
-            </p>
-            <a
-              href={demoUrl}
-              className="block break-all rounded border border-border bg-bg-dark p-3 text-sm text-neon-secondary transition-colors hover:border-neon-secondary"
-            >
-              {demoUrl}
-            </a>
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-text-muted">
-            ¿No lo ves? Fijate en la carpeta de spam.
-          </p>
-        )}
+        <p className="mt-3 text-sm text-text-muted">
+          ¿No lo ves? Fijate en la carpeta de spam.
+        </p>
 
         <Link
           href="/login"

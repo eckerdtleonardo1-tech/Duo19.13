@@ -51,7 +51,7 @@ export function LoginModal({
 
       {/* Form */}
       {mode === "login" ? (
-        <LoginForm onSuccess={onClose} />
+        <LoginForm onSuccess={onClose} onNavigate={onClose} />
       ) : (
         <RegisterForm onSuccess={onClose} />
       )}
