@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import type { User } from "@/types";
 
 interface AuthContextValue {
@@ -32,6 +33,7 @@ async function parseErrorMessage(res: Response, fallback: string) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -52,7 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const data = await res.json();
     setUser(data.user);
-  }, []);
+    router.refresh();
+  }, [router]);
 
   const register = useCallback(
     async (name: string, email: string, password: string) => {
@@ -66,14 +69,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const data = await res.json();
       setUser(data.user);
+      router.refresh();
     },
-    []
+    [router]
   );
 
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
-  }, []);
+    router.refresh();
+  }, [router]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
