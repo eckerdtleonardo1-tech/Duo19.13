@@ -61,6 +61,7 @@ export function ProductModal({
                 src={images[activeImage]}
                 alt={product.name}
                 fill
+                unoptimized
                 className="object-cover"
               />
             </div>
@@ -75,7 +76,7 @@ export function ProductModal({
                     }`}
                     aria-label={`Imagen ${i + 1}`}
                   >
-                    <Image src={src} alt="" fill className="object-cover" />
+                    <Image src={src} alt="" fill unoptimized className="object-cover" />
                   </button>
                 ))}
               </div>
