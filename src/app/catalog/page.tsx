@@ -8,8 +8,10 @@ export default async function CatalogPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const products = await listProducts({ category });
-  const dbCategories = await getUniqueCategories();
+  const [products, dbCategories] = await Promise.all([
+    listProducts({ category }),
+    getUniqueCategories(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">

@@ -115,6 +115,7 @@ export default async function HomePage() {
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/catalog"
+                prefetch={true}
                 className="btn-glow rounded-lg bg-neon-primary px-8 py-3.5 font-[family-name:var(--font-heading)] text-sm text-white transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-neon-primary"
               >
                 Ver catálogo
@@ -157,6 +158,7 @@ export default async function HomePage() {
             </h2>
             <Link
               href="/catalog"
+              prefetch={true}
               className="flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-neon-secondary"
             >
               Ver todo <ArrowRight size={14} aria-hidden="true" />
@@ -237,6 +239,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/catalog"
+              prefetch={true}
               className="btn-glow mt-8 rounded-lg bg-neon-primary px-10 py-4 font-[family-name:var(--font-heading)] text-sm text-white transition hover:opacity-90"
             >
               Ver todo el catálogo →

@@ -131,6 +131,7 @@ export function Header() {
                   <div className="p-1.5">
                     <Link
                       href="/catalog"
+                      prefetch={true}
                       onClick={() => setCatalogMenuOpen(false)}
                       className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-text-main transition-colors hover:bg-bg-dark hover:text-neon-secondary"
                     >
