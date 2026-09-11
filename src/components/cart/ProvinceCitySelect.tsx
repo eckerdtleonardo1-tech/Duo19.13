@@ -71,8 +71,9 @@ export function ProvinceCitySelect({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
-        <label className="mb-1 block text-sm text-text-muted">Provincia</label>
+        <label htmlFor="province-select" className="mb-1 block text-sm text-text-muted">Provincia</label>
         <select
+          id="province-select"
           required
           value={province}
           onChange={(e) => handleProvinceChange(e.target.value)}
@@ -88,8 +89,9 @@ export function ProvinceCitySelect({
       </div>
 
       <div className="relative">
-        <label className="mb-1 block text-sm text-text-muted">Ciudad</label>
+        <label htmlFor="city-input" className="mb-1 block text-sm text-text-muted">Ciudad</label>
         <input
+          id="city-input"
           type="text"
           required
           disabled={!province}

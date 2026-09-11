@@ -52,7 +52,7 @@ export default function CartPage() {
               {/* Product Info (Image + Title) */}
               <div className="flex items-center gap-4 min-w-0 flex-1">
                 <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-bg-dark">
-                  <Image src={item.image} alt={item.name} fill unoptimized className="object-cover" />
+                  <Image src={item.image} alt={item.name} fill className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-medium leading-tight text-text-main">{item.name}</p>

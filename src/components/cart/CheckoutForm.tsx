@@ -88,8 +88,9 @@ export function CheckoutForm() {
         Datos de envío
       </h2>
       <div>
-        <label className="mb-1 block text-sm text-text-muted">Nombre y apellido</label>
+        <label htmlFor="customer-name" className="mb-1 block text-sm text-text-muted">Nombre y apellido</label>
         <input
+          id="customer-name"
           type="text"
           required
           value={name}
@@ -99,8 +100,9 @@ export function CheckoutForm() {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm text-text-muted">WhatsApp</label>
+          <label htmlFor="customer-phone" className="mb-1 block text-sm text-text-muted">WhatsApp</label>
           <input
+            id="customer-phone"
             type="tel"
             required
             placeholder="Ej: 3329123456"
@@ -110,8 +112,9 @@ export function CheckoutForm() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm text-text-muted">Email (opcional)</label>
+          <label htmlFor="customer-email" className="mb-1 block text-sm text-text-muted">Email (opcional)</label>
           <input
+            id="customer-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -121,8 +124,9 @@ export function CheckoutForm() {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_120px]">
         <div>
-          <label className="mb-1 block text-sm text-text-muted">Domicilio</label>
+          <label htmlFor="customer-address" className="mb-1 block text-sm text-text-muted">Domicilio</label>
           <input
+            id="customer-address"
             type="text"
             required
             value={address}
@@ -131,8 +135,9 @@ export function CheckoutForm() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm text-text-muted">C. Postal</label>
+          <label htmlFor="customer-postalCode" className="mb-1 block text-sm text-text-muted">C. Postal</label>
           <input
+            id="customer-postalCode"
             type="text"
             required
             value={postalCode}
