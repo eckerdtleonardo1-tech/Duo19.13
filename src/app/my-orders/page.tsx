@@ -13,7 +13,7 @@ const formatDate = (iso: string) =>
 
 export default async function MyOrdersPage() {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/my-orders");
 
   const orders = await listOrdersForUser(user.id);
 

@@ -30,15 +30,33 @@ async function parseErrorMessage(res: Response, fallback: string) {
   }
 }
 
+
+/**
+ * Confirma contra el servidor que la cookie de sesión realmente quedó guardada.
+ *
+ * El endpoint de login devuelve el usuario junto con el Set-Cookie, pero si el
+ * navegador descarta esa cookie (modo estricto, bloqueo de terceros, HTTP sin
+ * TLS) el header mostraría al usuario como logueado mientras cada página del
+ * servidor lo rechaza: el síntoma es "me pide login estando logueado".
+ */
+async function fetchSessionUser(): Promise<User | null> {
+  const res = await fetch("/api/auth/me", { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.user ?? null;
+}
+
+const SESSION_NOT_PERSISTED =
+  "Iniciaste sesión pero el navegador no guardó la cookie de sesión. Revisá que no estén bloqueadas las cookies para este sitio.";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => res.json())
-      .then((data) => setUser(data.user))
+    fetchSessionUser()
+      .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
@@ -52,8 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!res.ok) {
       throw new Error(await parseErrorMessage(res, "No se pudo iniciar sesión"));
     }
-    const data = await res.json();
-    setUser(data.user);
+    await res.json();
+
+    const sessionUser = await fetchSessionUser();
+    if (!sessionUser) throw new Error(SESSION_NOT_PERSISTED);
+
+    setUser(sessionUser);
     router.refresh();
   }, [router]);
 
@@ -67,8 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         throw new Error(await parseErrorMessage(res, "No se pudo registrar la cuenta"));
       }
-      const data = await res.json();
-      setUser(data.user);
+      await res.json();
+
+      const sessionUser = await fetchSessionUser();
+      if (!sessionUser) throw new Error(SESSION_NOT_PERSISTED);
+
+      setUser(sessionUser);
       router.refresh();
     },
     [router]
