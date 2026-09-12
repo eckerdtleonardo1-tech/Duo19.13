@@ -32,6 +32,7 @@ export async function PUT(
       image: body.image,
       gallery: Array.isArray(body.gallery) ? body.gallery : [],
       category: body.category,
+      brand: typeof body.brand === "string" && body.brand.trim() ? body.brand.trim() : null,
       featured: Boolean(body.featured),
     });
     if (!product) return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });

@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       image: body.image,
       gallery: Array.isArray(body.gallery) ? body.gallery : [],
       category: body.category,
+      brand: typeof body.brand === "string" && body.brand.trim() ? body.brand.trim() : null,
       featured: Boolean(body.featured),
     });
     return NextResponse.json({ product }, { status: 201 });
@@ -47,5 +48,7 @@ export function validateProductInput(body: Record<string, unknown>): string | nu
   // lista fija: sólo que sea texto y entre en products.category VARCHAR(40).
   if (typeof body.category !== "string" || !body.category.trim()) return "La categoría es requerida";
   if (body.category.trim().length > 40) return "La categoría no puede superar los 40 caracteres";
+  if (body.brand !== undefined && body.brand !== null && typeof body.brand !== "string") return "Marca inválida";
+  if (typeof body.brand === "string" && body.brand.trim().length > 60) return "La marca no puede superar los 60 caracteres";
   return null;
 }

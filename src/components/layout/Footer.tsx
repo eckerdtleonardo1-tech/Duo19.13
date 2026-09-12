@@ -4,6 +4,7 @@ import {
   BUSINESS_NAME,
   CONTACT_EMAIL,
   INSTAGRAM_URL,
+  LEGAL_LINKS,
   WHATSAPP_URL,
 } from "@/lib/constants";
 
@@ -38,7 +39,7 @@ export function Footer() {
       <div className="h-px w-full bg-gradient-to-r from-transparent via-neon-primary/40 to-transparent" />
 
       <div className="mx-auto max-w-6xl px-4 py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
 
           {/* Brand */}
           <div className="flex flex-col gap-4">
@@ -95,6 +96,23 @@ export function Footer() {
                     </span>
                     {label}
                   </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-muted">
+              Legal
+            </p>
+            <ul className="flex flex-col gap-2.5">
+              {LEGAL_LINKS.map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm text-text-muted transition-colors hover:text-neon-secondary"
+                  >
+                    {label}
+                  </Link>
                 </li>
               ))}
             </ul>

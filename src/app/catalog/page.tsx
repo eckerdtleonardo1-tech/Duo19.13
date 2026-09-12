@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { CatalogClient } from "@/app/catalog/CatalogClient";
 import {
   countProducts,
+  getPriceRange,
+  getUniqueBrands,
   getUniqueCategories,
   isProductSort,
   listProducts,
@@ -18,6 +20,10 @@ interface CatalogParams {
   search?: RawParam;
   sort?: RawParam;
   page?: RawParam;
+  brand?: RawParam;
+  min?: RawParam;
+  max?: RawParam;
+  stock?: RawParam;
 }
 
 /** `?a=1&a=2` llega como array: se toma el primer valor. */
@@ -25,15 +31,33 @@ function first(value: RawParam): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+/** Devuelve el número sólo si el texto es un número válido y no negativo. */
+function positiveNumber(value: RawParam): number | undefined {
+  const raw = first(value);
+  if (raw === undefined || raw === "") return undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
 /** Normaliza los search params crudos de la URL a valores confiables. */
 function parseParams(raw: CatalogParams) {
   const category = first(raw.category)?.trim() || "all";
+  const brand = first(raw.brand)?.trim() || "all";
   const search = first(raw.search)?.trim() ?? "";
   const sortParam = first(raw.sort);
   const sort: ProductSort = isProductSort(sortParam) ? sortParam : "recent";
   const parsedPage = Number.parseInt(first(raw.page) ?? "1", 10);
   const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
-  return { category, search, sort, page };
+  const inStock = first(raw.stock) === "1";
+
+  let minPrice = positiveNumber(raw.min);
+  let maxPrice = positiveNumber(raw.max);
+  // Un rango invertido no devolvería nada: se da vuelta en vez de vaciar todo.
+  if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+    [minPrice, maxPrice] = [maxPrice, minPrice];
+  }
+
+  return { category, brand, search, sort, page, inStock, minPrice, maxPrice };
 }
 
 export async function generateMetadata({
@@ -68,16 +92,17 @@ export async function generateMetadata({
 }
 
 export default async function CatalogPage({ searchParams }: PageProps<"/catalog">) {
-  const { category, search, sort, page } = parseParams(
-    (await searchParams) as CatalogParams
-  );
+  const { category, brand, search, sort, page, inStock, minPrice, maxPrice } =
+    parseParams((await searchParams) as CatalogParams);
 
-  const filters = { category, search };
+  const filters = { category, brand, search, inStock, minPrice, maxPrice };
 
-  const [products, total, dbCategories] = await Promise.all([
+  const [products, total, dbCategories, dbBrands, priceRange] = await Promise.all([
     listProducts({ ...filters, sort, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }),
     countProducts(filters),
     getUniqueCategories(),
+    getUniqueBrands(),
+    getPriceRange(),
   ]);
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -107,9 +132,15 @@ export default async function CatalogPage({ searchParams }: PageProps<"/catalog"
         page={page}
         pageCount={pageCount}
         category={category}
+        brand={brand}
         search={search}
         sort={sort}
+        inStock={inStock}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
         dbCategories={dbCategories}
+        dbBrands={dbBrands}
+        priceRange={priceRange}
       />
     </div>
   );

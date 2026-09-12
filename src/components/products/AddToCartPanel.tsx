@@ -4,23 +4,17 @@ import { useState } from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
-import { LoginModal } from "@/components/auth/LoginModal";
 import type { Product } from "@/types";
 
 export function AddToCartPanel({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [qty, setQty] = useState(1);
-  const [loginOpen, setLoginOpen] = useState(false);
 
   const isOutOfStock = product.stock === 0;
 
   function handleAdd() {
     const result = addItem(product, qty);
-    if (result.requiresAuth) {
-      setLoginOpen(true);
-      return;
-    }
     if (result.ok) {
       showToast(`${product.name} agregado al carrito`);
     } else {
@@ -80,7 +74,6 @@ export function AddToCartPanel({ product }: { product: Product }) {
         Agregar al carrito
       </button>
 
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );
 }

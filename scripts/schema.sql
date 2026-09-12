@@ -83,6 +83,21 @@ CREATE TABLE IF NOT EXISTS password_resets (
 CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token_hash);
 CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
 
+-- Reseñas de productos. Una por usuario y producto: la segunda calificación
+-- actualiza la primera en vez de duplicarla (ON CONFLICT en lib/reviews.ts).
+CREATE TABLE IF NOT EXISTS reviews (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (product_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Migraciones idempotentes
 --
@@ -98,3 +113,20 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_postal_code VARCHAR(20);
 -- El panel de admin permite crear categorías propias: el CHECK con la lista
 -- fija de 9 categorías rechazaba cualquier producto con una categoría nueva.
 ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_check;
+
+-- Marca del producto, para el filtro del catálogo.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(60);
+CREATE INDEX IF NOT EXISTS idx_products_brand ON products(brand);
+
+-- Envío: el total del pedido pasa a ser subtotal + costo de envío.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method VARCHAR(20) NOT NULL DEFAULT 'envio';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC(12,2) NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal_amount NUMERIC(12,2) NOT NULL DEFAULT 0;
+
+-- En los pedidos con retiro en local no hay domicilio de entrega, así que estos
+-- campos dejan de ser obligatorios (se siguen exigiendo cuando hay envío, pero
+-- del lado de la aplicación, que es la que sabe el método elegido).
+ALTER TABLE orders ALTER COLUMN customer_address DROP NOT NULL;
+ALTER TABLE orders ALTER COLUMN customer_province DROP NOT NULL;
+
+ALTER TABLE orders ALTER COLUMN customer_city DROP NOT NULL;

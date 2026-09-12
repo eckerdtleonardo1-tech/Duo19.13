@@ -97,7 +97,7 @@ export default function CartPage() {
 
           {/* Order total on mobile */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-bg-card p-4 lg:hidden">
-            <span className="font-[family-name:var(--font-heading)] text-sm text-text-muted">TOTAL</span>
+            <span className="font-[family-name:var(--font-heading)] text-sm text-text-muted">SUBTOTAL</span>
             <span className="font-[family-name:var(--font-heading)] text-xl font-bold text-neon-secondary">
               {fmt(totalPrice)}
             </span>
@@ -110,7 +110,7 @@ export default function CartPage() {
             {/* Summary header */}
             <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
               <h2 className="font-[family-name:var(--font-heading)] text-base font-bold text-text-main">Resumen</h2>
-              <span className="font-[family-name:var(--font-heading)] text-xl font-bold text-neon-secondary">{fmt(totalPrice)}</span>
+              <span className="text-sm text-text-muted">Subtotal {fmt(totalPrice)}</span>
             </div>
 
             <CheckoutForm />

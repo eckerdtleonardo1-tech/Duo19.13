@@ -243,6 +243,19 @@ export default async function HomePage() {
             </Link>
           </div>
         </section>
+        <section aria-label="Derecho de arrepentimiento" className="border-t border-border bg-bg-card/40">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center sm:flex-row sm:justify-center sm:gap-3">
+            <p className="text-sm text-text-muted">
+              ¿Te arrepentiste de una compra? Tenés 10 días corridos para revocarla sin costo.
+            </p>
+            <Link
+              href="/arrepentimiento"
+              className="rounded-lg border border-neon-secondary/40 px-4 py-2 text-sm font-medium text-neon-secondary transition-colors hover:bg-neon-secondary/10"
+            >
+              Botón de Arrepentimiento
+            </Link>
+          </div>
+        </section>
       </div>
     </>
   );

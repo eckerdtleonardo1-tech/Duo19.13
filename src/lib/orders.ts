@@ -1,4 +1,5 @@
 import { pool } from "@/lib/db";
+import { quoteShipping, type ShippingMethod } from "@/lib/shipping";
 import type { Order, OrderItem } from "@/types";
 import type { OrderStatus } from "@/lib/constants";
 
@@ -9,10 +10,13 @@ function mapOrderRow(row: Record<string, unknown>): Order {
     customerName: row.customer_name as string,
     customerPhone: row.customer_phone as string,
     customerEmail: (row.customer_email as string) ?? null,
-    customerAddress: row.customer_address as string,
-    customerProvince: row.customer_province as string,
-    customerCity: row.customer_city as string,
+    customerAddress: (row.customer_address as string) ?? null,
+    customerProvince: (row.customer_province as string) ?? null,
+    customerCity: (row.customer_city as string) ?? null,
     customerPostalCode: (row.customer_postal_code as string) ?? null,
+    shippingMethod: (row.shipping_method as ShippingMethod) ?? "envio",
+    shippingCost: Number(row.shipping_cost ?? 0),
+    subtotalAmount: Number(row.subtotal_amount ?? row.total_amount ?? 0),
     totalAmount: Number(row.total_amount),
     status: row.status as OrderStatus,
     archived: row.archived as boolean,
@@ -44,10 +48,11 @@ export interface CreateOrderInput {
   customerName: string;
   customerPhone: string;
   customerEmail: string | null;
-  customerAddress: string;
-  customerProvince: string;
-  customerCity: string;
+  customerAddress: string | null;
+  customerProvince: string | null;
+  customerCity: string | null;
   customerPostalCode?: string | null;
+  shippingMethod: ShippingMethod;
   items: { productId: number; quantity: number }[];
 }
 
@@ -66,7 +71,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
     await client.query("BEGIN");
 
     const lineItems: { productId: number; name: string; price: number; quantity: number }[] = [];
-    let total = 0;
+    let subtotal = 0;
 
     for (const item of input.items) {
       const { rows } = await client.query(
@@ -91,14 +96,20 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
 
       const price = Number(product.price);
       lineItems.push({ productId: product.id, name: product.name, price, quantity: item.quantity });
-      total += price * item.quantity;
+      subtotal += price * item.quantity;
     }
+
+    // El envío se cotiza acá, con los precios que acaban de leerse de la base:
+    // si viniera del cliente, cualquiera podría mandar shippingCost = 0.
+    const shipping = quoteShipping(input.shippingMethod, input.customerProvince, subtotal);
+    const total = subtotal + shipping.cost;
 
     const { rows: orderRows } = await client.query(
       `INSERT INTO orders
         (user_id, customer_name, customer_phone, customer_email, customer_address,
-         customer_province, customer_city, customer_postal_code, total_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         customer_province, customer_city, customer_postal_code,
+         shipping_method, shipping_cost, subtotal_amount, total_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         input.userId,
@@ -109,6 +120,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
         input.customerProvince,
         input.customerCity,
         input.customerPostalCode || null,
+        input.shippingMethod,
+        shipping.cost,
+        subtotal,
         total,
       ]
     );
@@ -135,6 +149,32 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
   }
 }
 
+/**
+ * Trae los pedidos con sus items en dos consultas en vez de una por pedido:
+ * el panel de admin listaba 1 + N veces contra la base.
+ */
+async function attachItems(orders: Order[]): Promise<Order[]> {
+  if (orders.length === 0) return orders;
+
+  const { rows } = await pool.query(
+    "SELECT * FROM order_items WHERE order_id = ANY($1::int[]) ORDER BY id",
+    [orders.map((o) => o.id)]
+  );
+
+  const byOrder = new Map<number, OrderItem[]>();
+  for (const row of rows) {
+    const orderId = row.order_id as number;
+    const list = byOrder.get(orderId) ?? [];
+    list.push(mapItemRow(row));
+    byOrder.set(orderId, list);
+  }
+
+  for (const order of orders) {
+    order.items = byOrder.get(order.id) ?? [];
+  }
+  return orders;
+}
+
 export async function listOrders(filters: { status?: string; archived?: boolean } = {}) {
   const conditions: string[] = [];
   const values: unknown[] = [];
@@ -153,15 +193,8 @@ export async function listOrders(filters: { status?: string; archived?: boolean 
     `SELECT * FROM orders ${where} ORDER BY created_at DESC`,
     values
   );
-  
-  const orders = rows.map(mapOrderRow);
-  
-  // Agregar items a cada pedido (necesario para el recibo individual del admin)
-  for (const order of orders) {
-    order.items = await getOrderItems(order.id);
-  }
-  
-  return orders;
+
+  return attachItems(rows.map(mapOrderRow));
 }
 
 export async function listOrdersForUser(userId: number): Promise<Order[]> {
@@ -169,11 +202,7 @@ export async function listOrdersForUser(userId: number): Promise<Order[]> {
     "SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC",
     [userId]
   );
-  const orders = rows.map(mapOrderRow);
-  for (const order of orders) {
-    order.items = await getOrderItems(order.id);
-  }
-  return orders;
+  return attachItems(rows.map(mapOrderRow));
 }
 
 export async function getOrderItems(orderId: number): Promise<OrderItem[]> {

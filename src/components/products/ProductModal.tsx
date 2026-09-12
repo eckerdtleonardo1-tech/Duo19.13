@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
-import { LoginModal } from "@/components/auth/LoginModal";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
 import { categoryLabel } from "@/lib/constants";
@@ -22,17 +21,11 @@ export function ProductModal({
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [activeImage, setActiveImage] = useState(0);
-  const [loginOpen, setLoginOpen] = useState(false);
 
   const images = [product.image, ...product.gallery];
 
   function handleAdd() {
     const result = addItem(product, 1);
-    if (result.requiresAuth) {
-      // No está logueado → cierra el modal del producto y abre el de login
-      setLoginOpen(true);
-      return;
-    }
     if (result.ok) {
       showToast(`${product.name} agregado al carrito`);
       onClose();
@@ -118,8 +111,6 @@ export function ProductModal({
         </div>
       </Modal>
 
-      {/* Login modal — se monta encima cuando el usuario no tiene sesión */}
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );
 }

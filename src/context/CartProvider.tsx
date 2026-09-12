@@ -16,7 +16,6 @@ import type { CartItem, Product } from "@/types";
 interface AddResult {
   ok: boolean;
   message?: string;
-  requiresAuth?: boolean;
 }
 
 interface CartContextValue {
@@ -174,11 +173,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (product: Product, qty = 1): AddResult => {
-      // Requiere sesión activa para agregar al carrito
-      if (!user) {
-        return { ok: false, requiresAuth: true };
-      }
-
+      // El carrito es libre: sin sesión vive en localStorage y se fusiona con el
+      // del servidor al iniciar sesión. La cuenta se pide recién al confirmar.
       let result: AddResult = { ok: true };
       setItems((prev) => {
         const existing = prev.find((i) => i.productId === product.id);
@@ -207,7 +203,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
       return result;
     },
-    [syncToServer, user]
+    [syncToServer]
   );
 
 

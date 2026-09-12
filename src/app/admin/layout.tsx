@@ -14,6 +14,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           Panel de Administración
         </h1>
         <nav className="flex gap-4 text-sm">
+          <Link href="/admin" className="text-text-muted hover:text-neon-secondary">
+            Panel
+          </Link>
           <Link href="/admin/products" className="text-text-muted hover:text-neon-secondary">
             Productos
           </Link>

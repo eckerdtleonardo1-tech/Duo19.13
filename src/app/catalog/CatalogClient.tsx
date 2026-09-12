@@ -9,9 +9,12 @@ import {
   PackageSearch,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { CategoryFilter } from "@/components/products/CategoryFilter";
 import { ProductCard } from "@/components/products/ProductCard";
+import { formatCurrency } from "@/lib/format";
+import { categoryLabel } from "@/lib/constants";
 import type { ProductSort } from "@/lib/products";
 import type { Product } from "@/types";
 
@@ -20,11 +23,13 @@ const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: "price-asc", label: "Precio: menor a mayor" },
   { value: "price-desc", label: "Precio: mayor a menor" },
   { value: "name-asc", label: "Nombre: A-Z" },
+  { value: "rating-desc", label: "Mejor valorados" },
 ];
 
 const SEARCH_DEBOUNCE_MS = 350;
 
-type Patch = Partial<Record<"category" | "search" | "sort" | "page", string | null>>;
+type FilterKey = "category" | "search" | "sort" | "page" | "brand" | "min" | "max" | "stock";
+type Patch = Partial<Record<FilterKey, string | null>>;
 
 export function CatalogClient({
   products,
@@ -32,22 +37,37 @@ export function CatalogClient({
   page,
   pageCount,
   category,
+  brand,
   search,
   sort,
+  inStock,
+  minPrice,
+  maxPrice,
   dbCategories = [],
+  dbBrands = [],
+  priceRange,
 }: {
   products: Product[];
   total: number;
   page: number;
   pageCount: number;
   category: string;
+  brand: string;
   search: string;
   sort: ProductSort;
+  inStock: boolean;
+  minPrice?: number;
+  maxPrice?: number;
   dbCategories?: string[];
+  dbBrands?: string[];
+  priceRange: { min: number; max: number };
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [searchInput, setSearchInput] = useState(search);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [minInput, setMinInput] = useState(minPrice?.toString() ?? "");
+  const [maxInput, setMaxInput] = useState(maxPrice?.toString() ?? "");
 
   // El filtrado, el orden y la paginación ocurren en el servidor: el estado vive
   // en la URL, así que un resultado filtrado se puede compartir y el botón
@@ -56,9 +76,13 @@ export function CatalogClient({
     (patch: Patch) => {
       const next: Record<string, string | null> = {
         category: category !== "all" ? category : null,
+        brand: brand !== "all" ? brand : null,
         search: search || null,
         sort: sort !== "recent" ? sort : null,
         page: page > 1 ? String(page) : null,
+        min: minPrice !== undefined ? String(minPrice) : null,
+        max: maxPrice !== undefined ? String(maxPrice) : null,
+        stock: inStock ? "1" : null,
         ...patch,
       };
       const params = new URLSearchParams();
@@ -68,7 +92,7 @@ export function CatalogClient({
       const query = params.toString();
       return query ? `/catalog?${query}` : "/catalog";
     },
-    [category, search, sort, page]
+    [category, brand, search, sort, page, minPrice, maxPrice, inStock]
   );
 
   // Si la URL cambia por fuera del input ("atrás", un link con ?search=), se
@@ -96,10 +120,42 @@ export function CatalogClient({
     startTransition(() => router.push(buildHref(patch)));
   }
 
+  function applyPriceRange() {
+    navigate({ min: minInput.trim() || null, max: maxInput.trim() || null, page: null });
+  }
+
+  const activeFilters = [
+    category !== "all" && { key: "category" as const, label: categoryLabel(category) },
+    brand !== "all" && { key: "brand" as const, label: brand },
+    inStock && { key: "stock" as const, label: "Con stock" },
+    minPrice !== undefined && {
+      key: "min" as const,
+      label: `Desde ${formatCurrency(minPrice)}`,
+    },
+    maxPrice !== undefined && {
+      key: "max" as const,
+      label: `Hasta ${formatCurrency(maxPrice)}`,
+    },
+  ].filter(Boolean) as { key: FilterKey; label: string }[];
+
+  function clearFilter(key: FilterKey) {
+    if (key === "min") setMinInput("");
+    if (key === "max") setMaxInput("");
+    navigate({ [key]: null, page: null });
+  }
+
+  function clearAll() {
+    setMinInput("");
+    setMaxInput("");
+    startTransition(() =>
+      router.push(search ? `/catalog?search=${encodeURIComponent(search)}` : "/catalog")
+    );
+  }
+
   return (
     <div>
       {/* Filters bar */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         {/* Search */}
         <div className="relative flex-1">
           <Search
@@ -145,7 +201,128 @@ export function CatalogClient({
             ))}
           </select>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-expanded={filtersOpen}
+          className={`rounded-lg border px-4 py-2.5 text-sm transition-colors ${
+            activeFilters.length > 0
+              ? "border-neon-primary text-neon-primary"
+              : "border-border text-text-muted hover:border-neon-secondary hover:text-neon-secondary"
+          }`}
+        >
+          Filtros
+          {activeFilters.length > 0 && ` (${activeFilters.length})`}
+        </button>
       </div>
+
+      {/* Panel de filtros */}
+      {filtersOpen && (
+        <div className="mb-4 grid grid-cols-1 gap-5 rounded-xl border border-border bg-bg-card p-5 sm:grid-cols-3">
+          <div>
+            <label
+              htmlFor="brand-filter"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted"
+            >
+              Marca
+            </label>
+            <select
+              id="brand-filter"
+              value={brand}
+              onChange={(e) =>
+                navigate({ brand: e.target.value === "all" ? null : e.target.value, page: null })
+              }
+              className="w-full cursor-pointer rounded-lg border border-border bg-bg-dark px-3 py-2 text-sm text-text-main outline-none focus:border-neon-secondary"
+            >
+              <option value="all">Todas las marcas</option>
+              {dbBrands.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+            {dbBrands.length === 0 && (
+              <p className="mt-1 text-xs text-text-muted/60">
+                Todavía no cargaste marcas en los productos.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Precio
+            </span>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={minInput}
+                onChange={(e) => setMinInput(e.target.value)}
+                onBlur={applyPriceRange}
+                onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
+                placeholder={String(Math.floor(priceRange.min))}
+                aria-label="Precio mínimo"
+                className="w-full rounded-lg border border-border bg-bg-dark px-3 py-2 text-sm text-text-main outline-none focus:border-neon-secondary"
+              />
+              <span className="text-text-muted">—</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={maxInput}
+                onChange={(e) => setMaxInput(e.target.value)}
+                onBlur={applyPriceRange}
+                onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
+                placeholder={String(Math.ceil(priceRange.max))}
+                aria-label="Precio máximo"
+                className="w-full rounded-lg border border-border bg-bg-dark px-3 py-2 text-sm text-text-main outline-none focus:border-neon-secondary"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-between gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-text-main">
+              <input
+                type="checkbox"
+                checked={inStock}
+                onChange={(e) => navigate({ stock: e.target.checked ? "1" : null, page: null })}
+                className="h-4 w-4 accent-[var(--color-neon-primary)]"
+              />
+              Sólo con stock
+            </label>
+            {activeFilters.length > 0 && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="self-start text-sm text-text-muted underline-offset-2 transition-colors hover:text-neon-secondary hover:underline"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Chips de filtros activos */}
+      {activeFilters.length > 0 && (
+        <ul className="mb-4 flex flex-wrap items-center gap-2">
+          {activeFilters.map((filter) => (
+            <li key={filter.key}>
+              <button
+                type="button"
+                onClick={() => clearFilter(filter.key)}
+                className="flex items-center gap-1.5 rounded-full border border-neon-primary/40 bg-neon-primary/10 px-3 py-1 text-xs text-neon-primary transition-colors hover:bg-neon-primary/20"
+              >
+                {filter.label}
+                <X size={12} aria-hidden="true" />
+                <span className="sr-only">Quitar filtro</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Results count */}
       <p className="mb-4 text-sm text-text-muted" aria-live="polite">
@@ -170,7 +347,7 @@ export function CatalogClient({
             No encontramos productos
           </h2>
           <p className="mt-2 text-sm text-text-muted/60">
-            Probá con otras palabras o explorá todas las categorías
+            Probá con otras palabras o quitá algún filtro
           </p>
           <Link
             href="/catalog"

@@ -13,6 +13,7 @@ export interface ProductFormValues {
   image: string;
   gallery: string[];
   category: string;
+  brand: string;
   featured: boolean;
 }
 
@@ -24,6 +25,7 @@ const emptyValues: ProductFormValues = {
   image: "",
   gallery: [],
   category: CATEGORIES[0].value,
+  brand: "",
   featured: false,
 };
 
@@ -48,6 +50,7 @@ export function ProductForm({
           image: product.image,
           gallery: product.gallery,
           category: product.category,
+          brand: product.brand ?? "",
           featured: product.featured,
         }
       : emptyValues
@@ -153,6 +156,21 @@ export function ProductForm({
             className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="product-brand" className="mb-1 block text-sm text-text-muted">
+          Marca <span className="text-text-muted/60">(opcional — habilita el filtro por marca)</span>
+        </label>
+        <input
+          id="product-brand"
+          type="text"
+          maxLength={60}
+          value={values.brand}
+          onChange={(e) => setValues((v) => ({ ...v, brand: e.target.value }))}
+          placeholder="Ej: Logitech, Redragon, HyperX"
+          className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
+        />
       </div>
 
       <div>

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getUniqueCategories, listProductSitemapEntries } from "@/lib/products";
-import { SITE_URL } from "@/lib/constants";
+import { LEGAL_LINKS, SITE_URL } from "@/lib/constants";
 
 // Se regenera cada hora: alcanza para que los productos nuevos entren al índice
 // sin consultar la base en cada pedido de un crawler.
@@ -13,6 +13,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/catalog`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    // Las legales se indexan: dan confianza y Google las valora en e-commerce.
+    ...LEGAL_LINKS.map((link) => ({
+      url: `${SITE_URL}${link.href}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    })),
   ];
 
   // El sitemap se prerenderiza en el build. Si la base no responde en ese

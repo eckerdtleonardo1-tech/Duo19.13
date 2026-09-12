@@ -1,4 +1,5 @@
-import type { CategoryValue, OrderStatus } from "@/lib/constants";
+import type { OrderStatus } from "@/lib/constants";
+import type { ShippingMethod } from "@/lib/shipping";
 
 export interface Product {
   id: number;
@@ -9,9 +10,13 @@ export interface Product {
   image: string;
   gallery: string[];
   category: string;
+  brand: string | null;
   featured: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Promedio de reseñas (0 si todavía no tiene). */
+  ratingAverage: number;
+  ratingCount: number;
 }
 
 export interface User {
@@ -19,6 +24,16 @@ export interface User {
   name: string;
   email: string;
   isAdmin: boolean;
+}
+
+export interface Review {
+  id: number;
+  productId: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
 }
 
 export interface CartItem {
@@ -44,10 +59,13 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   customerEmail: string | null;
-  customerAddress: string;
-  customerProvince: string;
-  customerCity: string;
+  customerAddress: string | null;
+  customerProvince: string | null;
+  customerCity: string | null;
   customerPostalCode?: string | null;
+  shippingMethod: ShippingMethod;
+  shippingCost: number;
+  subtotalAmount: number;
   totalAmount: number;
   status: OrderStatus;
   archived: boolean;

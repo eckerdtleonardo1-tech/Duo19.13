@@ -1,4 +1,6 @@
 import { BUSINESS_NAME, WHATSAPP_NUMBER } from "@/lib/constants";
+import { formatCurrency } from "@/lib/format";
+import { shippingMethodLabel, type ShippingMethod } from "@/lib/shipping";
 
 interface OrderMessageItem {
   name: string;
@@ -6,54 +8,59 @@ interface OrderMessageItem {
   subtotal: number;
 }
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
-
 export interface OrderMessageData {
+  orderId: number;
   customerName: string;
   customerPhone: string;
   customerEmail?: string | null;
-  customerAddress: string;
-  customerProvince: string;
-  customerCity: string;
-  customerPostalCode: string;
+  customerAddress?: string | null;
+  customerProvince?: string | null;
+  customerCity?: string | null;
+  customerPostalCode?: string | null;
+  shippingMethod: ShippingMethod;
+  shippingCost: number;
+  subtotal: number;
   items: OrderMessageItem[];
   total: number;
 }
 
 export function buildOrderMessage(data: OrderMessageData): string {
-  const {
-    customerName,
-    customerPhone,
-    customerEmail,
-    customerAddress,
-    customerProvince,
-    customerCity,
-    customerPostalCode,
-    items,
-    total,
-  } = data;
-
-  const lines = items.map(
+  const lines = data.items.map(
     (item) => `- ${item.quantity}x *${item.name}* (${formatCurrency(item.subtotal)})`
   );
 
+  const isPickup = data.shippingMethod === "retiro";
+
+  const delivery = isPickup
+    ? ["*Retiro en local* (coordinamos el punto por acá)"]
+    : [
+        `*Datos de envío:*`,
+        `Domicilio: ${data.customerAddress}`,
+        `Ciudad: ${data.customerCity}`,
+        `Provincia: ${data.customerProvince}`,
+        `Código Postal: ${data.customerPostalCode}`,
+      ];
+
   return [
-    `*¡Hola ${BUSINESS_NAME}!* Soy ${customerName}. Quiero realizar el siguiente pedido:`,
+    `*¡Hola ${BUSINESS_NAME}!* Soy ${data.customerName}. Quiero realizar el pedido *#${data.orderId}*:`,
     "",
     ...lines,
     "",
-    `*Total a pagar: ${formatCurrency(total)}*`,
+    `Subtotal: ${formatCurrency(data.subtotal)}`,
+    `${shippingMethodLabel(data.shippingMethod)}: ${
+      data.shippingCost === 0 ? "sin cargo" : formatCurrency(data.shippingCost)
+    }`,
+    `*Total a pagar: ${formatCurrency(data.total)}*`,
     "",
-    `*Datos de envío:*`,
-    `Nombre: ${customerName}`,
-    `WhatsApp: ${customerPhone}`,
-    customerEmail ? `Email: ${customerEmail}` : null,
-    `Domicilio: ${customerAddress}`,
-    `Ciudad: ${customerCity}`,
-    `Provincia: ${customerProvince}`,
-    `Código Postal: ${customerPostalCode}`,
-  ].filter((line) => line !== null).join("\n");
+    `*Mis datos:*`,
+    `Nombre: ${data.customerName}`,
+    `WhatsApp: ${data.customerPhone}`,
+    data.customerEmail ? `Email: ${data.customerEmail}` : null,
+    "",
+    ...delivery,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 }
 
 export function buildWhatsappUrl(message: string): string {

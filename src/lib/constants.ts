@@ -36,6 +36,10 @@ export function categoryLabel(value: string): string {
 
 export const MAX_GALLERY_IMAGES = 4;
 
+/** Tope del comentario de una reseña. Vive acá y no en lib/reviews porque ese
+ *  módulo toca la base y no puede importarse desde un componente cliente. */
+export const MAX_COMMENT_LENGTH = 1000;
+
 export const ORDER_STATUSES = [
   "En preparación",
   "Enviado",
@@ -44,3 +48,29 @@ export const ORDER_STATUSES = [
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+// ── Datos legales ───────────────────────────────────────────────────────────
+// COMPLETAR antes de publicar. Las páginas legales muestran estos valores tal
+// cual y son obligatorios para vender online en Argentina (Ley 24.240 de
+// Defensa del Consumidor y Resolución 424/2020). Mientras estén vacíos, las
+// páginas muestran un aviso visible en su lugar.
+export const LEGAL_INFO = {
+  razonSocial: "",   // Ej: "Juan Pérez" o "Duo19-13 S.R.L."
+  cuit: "",          // Ej: "20-12345678-9"
+  domicilio: "",     // Domicilio legal completo
+} as const;
+
+/** Devuelve el dato legal o un marcador visible si todavía no se cargó. */
+export function legalValue(value: string, label: string): string {
+  return value.trim() || `[COMPLETAR: ${label}]`;
+}
+
+export const LEGAL_LINKS = [
+  { href: "/terminos", label: "Términos y Condiciones" },
+  { href: "/privacidad", label: "Política de Privacidad" },
+  { href: "/devoluciones", label: "Cambios y Devoluciones" },
+  { href: "/arrepentimiento", label: "Botón de Arrepentimiento" },
+] as const;
+
+/** Organismo de defensa del consumidor, obligatorio enlazarlo. */
+export const CONSUMER_DEFENSE_URL = "https://autogestion.produccion.gob.ar/consumidores";

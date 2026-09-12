@@ -7,7 +7,7 @@ import { Eye } from "lucide-react";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
 import { ProductModal } from "@/components/products/ProductModal";
-import { LoginModal } from "@/components/auth/LoginModal";
+import { StarRating } from "@/components/products/StarRating";
 import { formatCurrency } from "@/lib/format";
 import type { Product } from "@/types";
 
@@ -21,15 +21,9 @@ export function ProductCard({
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
 
   function handleAdd() {
     const result = addItem(product, 1);
-    if (result.requiresAuth) {
-      // No está logueado → abre el modal de login/registro
-      setLoginOpen(true);
-      return;
-    }
     if (result.ok) {
       showToast(`${product.name} agregado al carrito`);
     } else {
@@ -87,6 +81,8 @@ export function ProductCard({
           </Link>
         </h3>
 
+        <StarRating value={product.ratingAverage} count={product.ratingCount} />
+
         {/* Price */}
         <p className="text-lg font-semibold text-neon-secondary">
           {formatCurrency(product.price)}
@@ -115,8 +111,6 @@ export function ProductCard({
         <ProductModal product={product} onClose={() => setDetailsOpen(false)} />
       )}
 
-      {/* Modal de login — se abre cuando el usuario intenta agregar sin sesión */}
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </article>
   );
 }

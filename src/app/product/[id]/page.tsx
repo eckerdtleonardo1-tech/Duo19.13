@@ -7,7 +7,10 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { AddToCartPanel } from "@/components/products/AddToCartPanel";
 import { ProductCard } from "@/components/products/ProductCard";
+import { ProductReviews } from "@/components/products/ProductReviews";
+import { StarRating } from "@/components/products/StarRating";
 import { getProductById, listRelatedProducts } from "@/lib/products";
+import { listReviewsForProduct } from "@/lib/reviews";
 import { formatCurrency } from "@/lib/format";
 import { BUSINESS_NAME, SITE_URL, WHATSAPP_URL, categoryLabel } from "@/lib/constants";
 import type { Product } from "@/types";
@@ -77,7 +80,10 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
 
   if (!product) notFound();
 
-  const related = await listRelatedProducts(product);
+  const [related, reviews] = await Promise.all([
+    listRelatedProducts(product),
+    listReviewsForProduct(product.id),
+  ]);
   const categoryHref = `/catalog?category=${encodeURIComponent(product.category)}`;
   const label = categoryLabel(product.category);
 
@@ -102,6 +108,18 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
           : "https://schema.org/OutOfStock",
       seller: { "@type": "Organization", name: BUSINESS_NAME },
     },
+    // Google sólo acepta aggregateRating si realmente hay opiniones.
+    ...(product.ratingCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.ratingAverage,
+            reviewCount: product.ratingCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 
   const breadcrumbJsonLd = {
@@ -163,6 +181,15 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
               {product.name}
             </h1>
 
+            <div className="mt-3">
+              <StarRating
+                value={product.ratingAverage}
+                count={product.ratingCount}
+                size={16}
+                showEmpty
+              />
+            </div>
+
             <p className="mt-4 text-3xl font-semibold text-neon-secondary">
               {formatCurrency(product.price)}
             </p>
@@ -214,6 +241,13 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
             </div>
           </div>
         </div>
+
+        <ProductReviews
+          productId={product.id}
+          reviews={reviews}
+          ratingAverage={product.ratingAverage}
+          ratingCount={product.ratingCount}
+        />
 
         {related.length > 0 && (
           <section aria-labelledby="related-heading" className="mt-16 border-t border-border pt-10">
