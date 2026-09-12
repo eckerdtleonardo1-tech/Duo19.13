@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { Share2, MessageCircle, Mail } from "lucide-react";
+import {
+  BUSINESS_NAME,
+  CONTACT_EMAIL,
+  INSTAGRAM_URL,
+  WHATSAPP_URL,
+} from "@/lib/constants";
 
 const FOOTER_LINKS = [
   { label: "Catálogo",   href: "/catalog" },
@@ -8,10 +14,12 @@ const FOOTER_LINKS = [
   { label: "Carrito",    href: "/cart" },
 ];
 
+// Los datos salen de lib/constants para que footer y página de contacto no se
+// desincronicen (el footer tenía un número de WhatsApp de ejemplo y otro mail).
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com/duo19.13",    icon: Share2 },
-  { label: "WhatsApp",  href: "https://wa.me/5491100000000",        icon: MessageCircle },
-  { label: "Email",     href: "mailto:contacto@duo19-13.com",       icon: Mail },
+  { label: "Instagram", href: INSTAGRAM_URL,             icon: Share2 },
+  { label: "WhatsApp",  href: WHATSAPP_URL,             icon: MessageCircle },
+  { label: "Email",     href: `mailto:${CONTACT_EMAIL}`, icon: Mail },
 ];
 
 export function Footer() {
@@ -95,7 +103,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center gap-2 border-t border-border pt-6 text-center text-xs text-text-muted sm:flex-row sm:justify-between">
-          <p>© {year} Duo19-13. Todos los derechos reservados.</p>
+          <p>© {year} {BUSINESS_NAME}. Todos los derechos reservados.</p>
           <p>Hecho con 💜 para gamers argentinos</p>
         </div>
       </div>

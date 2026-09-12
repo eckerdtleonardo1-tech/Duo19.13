@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireAdmin } from "@/lib/auth";
 import { createProduct, listProducts } from "@/lib/products";
-import { CATEGORY_VALUES } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -44,6 +43,9 @@ export function validateProductInput(body: Record<string, unknown>): string | nu
   if (typeof body.price !== "number" || body.price < 0) return "Precio inválido";
   if (typeof body.stock !== "number" || body.stock < 0) return "Stock inválido";
   if (!body.image || typeof body.image !== "string") return "La imagen es requerida";
-  if (!CATEGORY_VALUES.includes(body.category as never)) return "Categoría inválida";
+  // El panel permite crear categorías propias, así que no se valida contra una
+  // lista fija: sólo que sea texto y entre en products.category VARCHAR(40).
+  if (typeof body.category !== "string" || !body.category.trim()) return "La categoría es requerida";
+  if (body.category.trim().length > 40) return "La categoría no puede superar los 40 caracteres";
   return null;
 }

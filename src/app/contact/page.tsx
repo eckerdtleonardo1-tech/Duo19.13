@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { Mail, MessageCircle } from "lucide-react";
-import { WHATSAPP_NUMBER } from "@/lib/constants";
+import { CONTACT_EMAIL, WHATSAPP_URL } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  title: "Contacto",
+  description:
+    "Escribinos por WhatsApp o email si tenés dudas sobre un producto o el estado de tu pedido.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function ContactPage() {
   return (
@@ -12,20 +20,20 @@ export default function ContactPage() {
       </p>
       <div className="flex flex-col items-center gap-4">
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 rounded-md bg-neon-primary px-6 py-3 font-[family-name:var(--font-heading)] text-white transition hover:opacity-90"
         >
-          <MessageCircle size={20} />
+          <MessageCircle size={20} aria-hidden="true" />
           Escribinos por WhatsApp
         </a>
         <a
-          href="mailto:contacto@duo1913.com"
+          href={`mailto:${CONTACT_EMAIL}`}
           className="flex items-center gap-2 text-neon-secondary hover:underline"
         >
-          <Mail size={18} />
-          contacto@duo1913.com
+          <Mail size={18} aria-hidden="true" />
+          {CONTACT_EMAIL}
         </a>
       </div>
     </div>

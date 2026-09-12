@@ -8,10 +8,8 @@ CREATE TABLE IF NOT EXISTS products (
   stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
   image TEXT NOT NULL,
   gallery JSONB NOT NULL DEFAULT '[]'::jsonb,
-  category VARCHAR(40) NOT NULL CHECK (category IN (
-    'teclados','mouses','auriculares','sillas-gamer',
-    'iluminacion-rgb','soportes-monitor','microfonos',
-    'mousepads','organizadores-cables')),
+  -- Sin CHECK fijo: el admin puede crear categorias propias desde el panel.
+  category VARCHAR(40) NOT NULL,
   featured BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -39,6 +37,7 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_address VARCHAR(255) NOT NULL,
   customer_province VARCHAR(100) NOT NULL,
   customer_city VARCHAR(100) NOT NULL,
+  customer_postal_code VARCHAR(20),
   total_amount NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0),
   status VARCHAR(30) NOT NULL DEFAULT 'En preparación',
   archived BOOLEAN NOT NULL DEFAULT false,
@@ -83,3 +82,19 @@ CREATE TABLE IF NOT EXISTS password_resets (
 );
 CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token_hash);
 CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migraciones idempotentes
+--
+-- Los CREATE TABLE de arriba usan IF NOT EXISTS, así que en una base que ya
+-- existe no aplican ningún cambio de columnas ni de constraints. Todo lo que se
+-- agregue al schema después del primer deploy tiene que repetirse acá para que
+-- `npm run db:migrate` deje iguales a una base nueva y a una ya creada.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- El checkout pide código postal y lib/orders.ts lo inserta.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_postal_code VARCHAR(20);
+
+-- El panel de admin permite crear categorías propias: el CHECK con la lista
+-- fija de 9 categorías rechazaba cualquier producto con una categoría nueva.
+ALTER TABLE products DROP CONSTRAINT IF EXISTS products_category_check;

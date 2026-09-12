@@ -1,5 +1,18 @@
 export const BUSINESS_NAME = "Duo19-13";
+
+// URL pública del sitio. La usan metadata, sitemap, robots y el JSON-LD, así
+// que tiene que ser absoluta y sin barra final.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://duo19-13.vercel.app";
+
+// ── Contacto ────────────────────────────────────────────────────────────────
+// Fuente única: el footer y la página de contacto tenían números de WhatsApp y
+// mails distintos entre sí. Todo lo que muestre un dato de contacto sale de acá.
 export const WHATSAPP_NUMBER = "5493329534029";
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
+export const CONTACT_EMAIL = "contacto@duo19-13.com";
+export const INSTAGRAM_USER = "duo19.13";
+export const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_USER}`;
 
 export const CATEGORIES = [
   { value: "teclados", label: "Teclados" },

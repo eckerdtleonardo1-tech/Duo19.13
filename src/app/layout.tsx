@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartProvider";
 import { ToastProvider } from "@/context/ToastProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
 
 const orbitron = Orbitron({
   variable: "--font-orbitron",
@@ -19,54 +20,40 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 });
 
-const BASE_URL = "https://duo19-13.vercel.app";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(BASE_URL),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Duo19-13 | Setup Gamer & Accesorios",
-    template: "%s | Duo19-13",
+    default: `${BUSINESS_NAME} | Setup Gamer & Accesorios`,
+    template: `%s | ${BUSINESS_NAME}`,
   },
   description:
     "Tienda de setup gamer en Argentina: teclados, mouses, auriculares, sillas, iluminación RGB y más. Envíos a todo el país con garantía oficial.",
   keywords: ["setup gamer", "teclados gamer", "mouses gaming", "auriculares", "silla gamer", "iluminación RGB", "accesorios PC"],
-  authors: [{ name: "Duo19-13" }],
-  creator: "Duo19-13",
+  authors: [{ name: BUSINESS_NAME }],
+  creator: BUSINESS_NAME,
+  alternates: { canonical: "/" },
   robots: {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true },
   },
+  // Las imágenes y los íconos salen de las file conventions del App Router
+  // (icon.svg, apple-icon.tsx, opengraph-image.tsx, twitter-image.tsx). Antes
+  // se declaraban acá a mano apuntando a archivos que no existían en public/.
   openGraph: {
     type: "website",
     locale: "es_AR",
-    url: BASE_URL,
-    siteName: "Duo19-13",
-    title: "Duo19-13 | Setup Gamer & Accesorios",
+    url: SITE_URL,
+    siteName: BUSINESS_NAME,
+    title: `${BUSINESS_NAME} | Setup Gamer & Accesorios`,
     description:
       "Teclados, mouses, auriculares, sillas y más. Los mejores accesorios gamer con envíos a todo el país.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Duo19-13 – Setup Gamer & Accesorios",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Duo19-13 | Setup Gamer & Accesorios",
+    title: `${BUSINESS_NAME} | Setup Gamer & Accesorios`,
     description:
       "Teclados, mouses, auriculares, sillas y más. Los mejores accesorios gamer con envíos a todo el país.",
-    images: ["/og-image.jpg"],
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: "/apple-touch-icon.png",
   },
 };
 
