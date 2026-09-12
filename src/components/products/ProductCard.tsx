@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { Eye } from "lucide-react";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
 import { ProductModal } from "@/components/products/ProductModal";
 import { LoginModal } from "@/components/auth/LoginModal";
+import { formatCurrency } from "@/lib/format";
 import type { Product } from "@/types";
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
 
 export function ProductCard({
   product,
@@ -38,6 +38,9 @@ export function ProductCard({
   }
 
   const isOutOfStock = product.stock === 0;
+  // Link real a la página del producto: es lo que siguen los buscadores y lo que
+  // se puede compartir. El modal queda como vista rápida.
+  const href = `/product/${product.id}`;
 
   return (
     <article
@@ -45,39 +48,44 @@ export function ProductCard({
       aria-label={product.name}
     >
       {/* Product image */}
-      <button
-        type="button"
-        onClick={() => setDetailsOpen(true)}
-        className="relative aspect-square w-full cursor-zoom-in bg-bg-dark focus-visible:outline-neon-primary"
-        aria-label={`Ver detalles de ${product.name}`}
-      >
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          unoptimized
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-          priority={priority}
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        {isOutOfStock && (
-          <span className="absolute right-2 top-2 rounded bg-danger px-2 py-1 text-xs font-semibold text-white">
-            Sin stock
-          </span>
-        )}
-      </button>
+      <div className="relative aspect-square w-full bg-bg-dark">
+        <Link href={href} className="absolute inset-0 block" aria-label={product.name}>
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            unoptimized
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+            priority={priority}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </Link>
 
-      {/* Product info */}
-      <div className="flex flex-1 flex-col gap-2 p-4">
+        {/* Vista rápida — hermano del Link, no anidado, para no meter un botón
+            adentro de un <a>. */}
         <button
           type="button"
           onClick={() => setDetailsOpen(true)}
-          className="text-left focus-visible:outline-neon-primary"
+          className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-bg-dark/90 px-3 py-1.5 text-xs text-text-main opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:border-neon-secondary hover:text-neon-secondary focus-visible:opacity-100 group-hover:opacity-100"
         >
-          <h3 className="line-clamp-2 min-h-[2.5rem] font-[family-name:var(--font-heading)] text-sm leading-tight text-text-main transition-colors hover:text-neon-secondary">
-            {product.name}
-          </h3>
+          <Eye size={13} aria-hidden="true" />
+          Vista rápida
         </button>
+
+        {isOutOfStock && (
+          <span className="absolute right-2 top-2 z-10 rounded bg-danger px-2 py-1 text-xs font-semibold text-white">
+            Sin stock
+          </span>
+        )}
+      </div>
+
+      {/* Product info */}
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h3 className="line-clamp-2 min-h-[2.5rem] font-[family-name:var(--font-heading)] text-sm leading-tight text-text-main">
+          <Link href={href} className="transition-colors hover:text-neon-secondary">
+            {product.name}
+          </Link>
+        </h3>
 
         {/* Price */}
         <p className="text-lg font-semibold text-neon-secondary">

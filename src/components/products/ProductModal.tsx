@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { useCart } from "@/context/CartProvider";
 import { useToast } from "@/context/ToastProvider";
 import { categoryLabel } from "@/lib/constants";
+import { formatCurrency } from "@/lib/format";
 import type { Product } from "@/types";
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value);
 
 export function ProductModal({
   product,
@@ -107,6 +106,14 @@ export function ProductModal({
             >
               Agregar al carrito
             </button>
+
+            <Link
+              href={`/product/${product.id}`}
+              onClick={onClose}
+              className="mt-3 text-center text-sm text-neon-secondary transition-colors hover:underline"
+            >
+              Ver todos los detalles →
+            </Link>
           </div>
         </div>
       </Modal>

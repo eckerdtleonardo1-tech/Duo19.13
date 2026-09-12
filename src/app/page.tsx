@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Script from "next/script";
 import {
   ShieldCheck,
   Truck,
@@ -15,8 +14,10 @@ import {
   Gamepad2,
   ArrowRight,
 } from "lucide-react";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { FeaturedCarousel } from "@/components/products/FeaturedCarousel";
 import { listProducts } from "@/lib/products";
+import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
 
 export const revalidate = 60;
 
@@ -41,8 +42,8 @@ const CATEGORY_CARDS = [
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Store",
-  name: "Duo19-13",
-  url: "https://duo19-13.vercel.app",
+  name: BUSINESS_NAME,
+  url: SITE_URL,
   description: "Tienda de setup gamer en Argentina: teclados, mouses, auriculares, sillas, iluminación RGB y accesorios para PC.",
   currenciesAccepted: "ARS",
   paymentAccepted: "Transferencia bancaria, efectivo",
@@ -52,15 +53,11 @@ const JSON_LD = {
 };
 
 export default async function HomePage() {
-  const featured = (await listProducts({ featured: true })).slice(0, 9);
+  const featured = await listProducts({ featured: true, limit: 9 });
 
   return (
     <>
-      <Script
-        id="json-ld-store"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
-      />
+      <JsonLd data={JSON_LD} />
 
       <div>
         {/* ── Hero ────────────────────────────────────────────────── */}

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ShoppingCart,
   Menu,
@@ -22,6 +22,7 @@ export function Header() {
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -61,11 +62,14 @@ export function Header() {
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/catalog?search=${encodeURIComponent(searchQuery.trim())}`;
-      setSearchOpen(false);
-      setSearchQuery("");
-    }
+    const query = searchQuery.trim();
+    if (!query) return;
+    // El catálogo lee ?search= en el servidor. Antes esto usaba
+    // window.location.href, que recargaba toda la app para nada.
+    router.push(`/catalog?search=${encodeURIComponent(query)}`);
+    setSearchOpen(false);
+    setMobileOpen(false);
+    setSearchQuery("");
   }
 
   const userInitial = user?.name?.charAt(0).toUpperCase() ?? "";
