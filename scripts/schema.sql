@@ -130,3 +130,8 @@ ALTER TABLE orders ALTER COLUMN customer_address DROP NOT NULL;
 ALTER TABLE orders ALTER COLUMN customer_province DROP NOT NULL;
 
 ALTER TABLE orders ALTER COLUMN customer_city DROP NOT NULL;
+
+-- Momento del último cambio de contraseña. Los JWT emitidos antes de esta
+-- marca se rechazan, así un cambio de contraseña cierra las sesiones abiertas
+-- (por ejemplo, la de alguien que te había robado la cuenta).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ NOT NULL DEFAULT now();

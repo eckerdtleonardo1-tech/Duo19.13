@@ -81,7 +81,9 @@ export async function resetPasswordWithToken(
     const passwordHash = await hashPassword(newPassword);
 
     await client.query(
-      "UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2",
+      `UPDATE users
+       SET password_hash = $1, password_changed_at = now(), updated_at = now()
+       WHERE id = $2`,
       [passwordHash, userId]
     );
     await client.query("UPDATE password_resets SET used_at = now() WHERE id = $1", [id]);

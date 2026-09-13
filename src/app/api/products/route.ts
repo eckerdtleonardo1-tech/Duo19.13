@@ -39,6 +39,18 @@ export async function POST(request: Request) {
   }
 }
 
+/**
+ * Las imágenes viajan como data URL en base64 y se guardan en la fila del
+ * producto. El navegador ya las achica, pero la API no puede confiar en eso:
+ * sin tope, una sola imagen puede reventar el límite de tamaño de request.
+ */
+const MAX_IMAGE_CHARS = 1_500_000; // ~1,1 MB de imagen real
+const MAX_GALLERY_IMAGES = 6;
+
+function imageTooLarge(value: unknown): boolean {
+  return typeof value === "string" && value.length > MAX_IMAGE_CHARS;
+}
+
 export function validateProductInput(body: Record<string, unknown>): string | null {
   if (!body?.name || typeof body.name !== "string") return "El nombre es requerido";
   if (typeof body.price !== "number" || body.price < 0) return "Precio inválido";
@@ -50,5 +62,15 @@ export function validateProductInput(body: Record<string, unknown>): string | nu
   if (body.category.trim().length > 40) return "La categoría no puede superar los 40 caracteres";
   if (body.brand !== undefined && body.brand !== null && typeof body.brand !== "string") return "Marca inválida";
   if (typeof body.brand === "string" && body.brand.trim().length > 60) return "La marca no puede superar los 60 caracteres";
+
+  if (imageTooLarge(body.image)) return "La imagen principal es demasiado grande";
+  if (body.gallery !== undefined) {
+    if (!Array.isArray(body.gallery)) return "Galería inválida";
+    if (body.gallery.length > MAX_GALLERY_IMAGES)
+      return `La galería no puede tener más de ${MAX_GALLERY_IMAGES} imágenes`;
+    if (body.gallery.some((img) => typeof img !== "string"))
+      return "Galería inválida";
+    if (body.gallery.some(imageTooLarge)) return "Hay una imagen de la galería demasiado grande";
+  }
   return null;
 }

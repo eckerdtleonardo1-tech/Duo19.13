@@ -50,12 +50,23 @@ export async function getSessionUser(): Promise<User | null> {
   if (!payload) return null;
 
   const { rows } = await pool.query(
-    "SELECT id, name, email, is_admin FROM users WHERE id = $1",
+    "SELECT id, name, email, is_admin, password_changed_at FROM users WHERE id = $1",
     [payload.sub]
   );
   if (rows.length === 0) return null;
 
   const row = rows[0];
+
+  // Un token emitido antes del último cambio de contraseña ya no vale: es lo
+  // que hace que cambiarla expulse a quien tuviera la sesión abierta.
+  if (payload.iat && row.password_changed_at) {
+    const changedAtSeconds = Math.floor(
+      new Date(row.password_changed_at).getTime() / 1000
+    );
+    // 1s de tolerancia: el iat del token se redondea hacia abajo y puede
+    // quedar justo por debajo del timestamp que guarda Postgres.
+    if (payload.iat < changedAtSeconds - 1) return null;
+  }
   return {
     id: row.id,
     name: row.name,

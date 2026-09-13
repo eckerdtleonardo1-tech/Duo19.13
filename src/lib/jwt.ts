@@ -13,6 +13,9 @@ export interface SessionPayload {
   email: string;
   name: string;
   isAdmin: boolean;
+  /** Emitido en segundos (lo agrega jsonwebtoken). Se compara contra
+   *  users.password_changed_at para cortar sesiones viejas. */
+  iat?: number;
 }
 
 export function signSessionToken(payload: SessionPayload) {

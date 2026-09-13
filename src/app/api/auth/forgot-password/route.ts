@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { createResetToken } from "@/lib/passwordReset";
-import { buildPasswordResetEmail, sendMail } from "@/lib/mailer";
+import { buildPasswordResetEmail, isMailConfigured, sendMail } from "@/lib/mailer";
 import {
   getClientIp,
   isPasswordResetLocked,
   recordPasswordResetAttempt,
 } from "@/lib/rateLimit";
-import { BUSINESS_NAME } from "@/lib/constants";
+import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
 
 // Respuesta única para todos los casos: si dijéramos "ese email no existe",
 // el formulario serviría para averiguar qué cuentas están registradas.
@@ -14,11 +14,6 @@ const GENERIC_RESPONSE = {
   message:
     "Si el email está registrado, te mandamos un link para restablecer tu contraseña.",
 };
-
-function getBaseUrl(request: Request): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  return new URL(request.url).origin;
-}
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -41,20 +36,18 @@ export async function POST(request: Request) {
 
   const reset = await createResetToken(email);
   if (reset) {
-    const resetUrl = `${getBaseUrl(request)}/reset-password?token=${reset.token}`;
+    const resetUrl = `${SITE_URL}/reset-password?token=${reset.token}`;
     const { text, html } = buildPasswordResetEmail(reset.user.name, resetUrl);
-    
-    // Si no hay SMTP configurado, lanzamos un error en lugar de pretender que se envió.
-    // NUNCA debemos devolver el link al cliente por seguridad.
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      console.error("CRÍTICO: Intento de reseteo de contraseña sin SMTP configurado.");
-      return NextResponse.json(
-        { error: "El sistema de correos no está configurado. Contactá al soporte." },
-        { status: 500 }
-      );
-    }
 
+    // Los fallos de envío se registran pero nunca cambian la respuesta: si el
+    // error saliera al cliente, comparar respuestas serviría para averiguar
+    // qué direcciones tienen cuenta.
     try {
+      if (!isMailConfigured) {
+        console.error(
+          "[forgot-password] SMTP sin configurar: el mail de recuperación no se envió."
+        );
+      }
       await sendMail(
         reset.user.email,
         `Restablecer tu contraseña — ${BUSINESS_NAME}`,

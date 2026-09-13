@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronDown,
   Shield,
+  UserCog,
 } from "lucide-react";
 import { useCart } from "@/context/CartProvider";
 import { useAuth } from "@/context/AuthProvider";
@@ -247,6 +248,13 @@ export function Header() {
                   </div>
                   <div className="p-1.5">
                     <Link
+                      href="/account"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-muted transition-colors hover:bg-bg-dark hover:text-text-main"
+                    >
+                      <UserCog size={14} aria-hidden="true" /> Mi cuenta
+                    </Link>
+                    <Link
                       href="/my-orders"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-muted transition-colors hover:bg-bg-dark hover:text-text-main"
@@ -359,6 +367,7 @@ export function Header() {
                   <div>
                     <p className="text-sm font-medium text-text-main">{user.name}</p>
                     <div className="mt-1 flex gap-3">
+                      <Link href="/account" className="text-xs text-text-muted hover:text-neon-secondary">Mi cuenta</Link>
                       <Link href="/my-orders" className="text-xs text-text-muted hover:text-neon-secondary">Mis pedidos</Link>
                       {user.isAdmin && (
                         <Link href="/admin" className="text-xs text-neon-primary hover:text-neon-primary/80 font-medium">

@@ -33,7 +33,44 @@ function redirectToLogin(request: NextRequest, clearCookie: boolean) {
   return response;
 }
 
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * Segunda barrera anti-CSRF, además de SameSite=Lax en la cookie.
+ *
+ * Un ataque CSRF necesita sí o sí un navegador, y los navegadores mandan
+ * Origin en toda petición que cambia estado. Si viene y no coincide con el
+ * host propio, se corta. Si no viene (curl, scripts, server a server) no hay
+ * navegador que engañar, así que se deja pasar.
+ */
+function checkApiOrigin(request: NextRequest) {
+  if (SAFE_METHODS.has(request.method)) return NextResponse.next();
+
+  const origin = request.headers.get("origin");
+  if (!origin) return NextResponse.next();
+
+  const host = request.headers.get("host");
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    return NextResponse.json({ error: "Origen inválido" }, { status: 403 });
+  }
+
+  if (!host || originHost !== host) {
+    return NextResponse.json({ error: "Origen no permitido" }, { status: 403 });
+  }
+  return NextResponse.next();
+}
+
 export default function proxy(request: NextRequest) {
+  // En /api no se redirige nunca: cada route handler decide su propia auth
+  // (hay endpoints públicos como el catálogo o el login). Acá sólo se filtra
+  // el origen de las mutaciones.
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    return checkApiOrigin(request);
+  }
+
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const payload = token ? decodeJwt(token) : null;
 
@@ -57,5 +94,12 @@ export default function proxy(request: NextRequest) {
 
 export const config = {
   // Las dos formas: `/x/:path*` por sí sola no siempre matchea la ruta pelada.
-  matcher: ["/admin", "/admin/:path*", "/my-orders", "/my-orders/:path*"],
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/my-orders",
+    "/my-orders/:path*",
+    "/account",
+    "/api/:path*",
+  ],
 };

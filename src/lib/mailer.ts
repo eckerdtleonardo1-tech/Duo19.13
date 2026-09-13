@@ -4,6 +4,19 @@ import { BUSINESS_NAME } from "@/lib/constants";
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
 
+/**
+ * Escapa texto antes de meterlo en el HTML del mail. Sin esto, un nombre o un
+ * producto con etiquetas HTML puede deformar el contenido del mensaje.
+ */
+function esc(value: string | number): string {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export const isMailConfigured = Boolean(SMTP_USER && SMTP_PASSWORD);
 
 let transporter: Transporter | null = null;
@@ -54,7 +67,7 @@ export function buildPasswordResetEmail(name: string, resetUrl: string) {
         <p style="font-size:22px;font-weight:bold;margin:0 0 24px">
           Duo19<span style="color:#b026ff">-</span>13
         </p>
-        <p style="margin:0 0 16px">Hola ${name},</p>
+        <p style="margin:0 0 16px">Hola ${esc(name)},</p>
         <p style="margin:0 0 16px;color:#a0a0a0">
           Pediste restablecer tu contraseña. Tocá el botón para elegir una nueva.
           El link vence en 1 hora.
@@ -123,7 +136,7 @@ export function buildOrderConfirmationEmail(data: OrderEmailData) {
     .map(
       (i) => `
         <tr>
-          <td style="padding:8px 0;color:#f0f0f0">${i.quantity}x ${i.name}</td>
+          <td style="padding:8px 0;color:#f0f0f0">${esc(i.quantity)}x ${esc(i.name)}</td>
           <td style="padding:8px 0;color:#00f0ff;text-align:right;white-space:nowrap">${money(i.subtotal)}</td>
         </tr>`
     )
@@ -135,9 +148,9 @@ export function buildOrderConfirmationEmail(data: OrderEmailData) {
         <p style="font-size:22px;font-weight:bold;margin:0 0 8px">
           Duo19<span style="color:#b026ff">-</span>13
         </p>
-        <p style="margin:0 0 24px;color:#a0a0a0">Pedido #${data.orderId}</p>
+        <p style="margin:0 0 24px;color:#a0a0a0">Pedido #${esc(data.orderId)}</p>
 
-        <p style="margin:0 0 16px">Hola ${data.customerName}, recibimos tu pedido.</p>
+        <p style="margin:0 0 16px">Hola ${esc(data.customerName)}, recibimos tu pedido.</p>
 
         <table style="width:100%;border-collapse:collapse;margin:0 0 16px">
           ${itemRows}
@@ -149,7 +162,7 @@ export function buildOrderConfirmationEmail(data: OrderEmailData) {
             <td style="padding:8px 0;text-align:right">${money(data.subtotal)}</td>
           </tr>
           <tr>
-            <td style="padding:8px 0;color:#a0a0a0">${data.shippingLabel}</td>
+            <td style="padding:8px 0;color:#a0a0a0">${esc(data.shippingLabel)}</td>
             <td style="padding:8px 0;text-align:right">${
               data.shippingCost === 0 ? "Sin cargo" : money(data.shippingCost)
             }</td>
