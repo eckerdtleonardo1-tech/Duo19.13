@@ -22,7 +22,13 @@ const isLocalDb =
  * conviene pasar al pooler de transacciones (puerto 6543) antes que subir
  * este número.
  */
-const MAX_CONNECTIONS_PER_PROCESS = isLocalDb ? 10 : 2;
+// El pooler de transacciones (puerto 6543) admite muchísimos más clientes
+// que los 15 del modo sesión (5432), así que si la URL apunta ahí se puede
+// aflojar el límite sin riesgo. Detectarlo por la URL evita tener que tocar
+// código el día que se cambie la variable de entorno.
+const isTransactionPooler = !!connectionString && connectionString.includes(":6543");
+
+const MAX_CONNECTIONS_PER_PROCESS = isLocalDb || isTransactionPooler ? 10 : 2;
 
 export const pool =
   global.__pgPool ??
