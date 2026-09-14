@@ -194,3 +194,94 @@ export function buildOrderConfirmationEmail(data: OrderEmailData) {
 
   return { text, html };
 }
+
+// ── Aviso interno de venta ───────────────────────────────────────────────────
+
+export interface NewOrderNoticeData {
+  orderId: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string | null;
+  items: { name: string; quantity: number; subtotal: number }[];
+  total: number;
+  shippingLabel: string;
+  deliveryLines: string[];
+  adminUrl: string;
+}
+
+/**
+ * Mail que le llega a la tienda cuando entra una venta.
+ *
+ * El handoff a WhatsApp puede fallar (el navegador del cliente puede bloquear
+ * la ventana emergente), y en ese caso el pedido queda guardado sin que nadie
+ * se entere. Este aviso es la red de seguridad.
+ */
+export function buildNewOrderNotice(data: NewOrderNoticeData) {
+  const itemLines = data.items.map(
+    (i) => `- ${i.quantity}x ${i.name} — ${money(i.subtotal)}`
+  );
+
+  const contactLines = [
+    `Cliente: ${data.customerName}`,
+    `WhatsApp: ${data.customerPhone}`,
+    ...(data.customerEmail ? [`Email: ${data.customerEmail}`] : []),
+  ];
+
+  const text = [
+    `Nuevo pedido #${data.orderId} — ${money(data.total)}`,
+    "",
+    ...contactLines,
+    "",
+    "Productos:",
+    ...itemLines,
+    "",
+    `Entrega (${data.shippingLabel}):`,
+    ...data.deliveryLines,
+    "",
+    `Verlo en el panel: ${data.adminUrl}`,
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#0a0a0f;padding:32px;color:#f0f0f0">
+      <div style="max-width:520px;margin:0 auto;background:#14141f;border:1px solid #2a2a35;border-radius:12px;padding:32px">
+        <p style="margin:0 0 4px;font-size:13px;color:#a0a0a0">Nuevo pedido</p>
+        <p style="margin:0 0 24px;font-size:24px;font-weight:bold;color:#39ff88">
+          #${esc(data.orderId)} — ${esc(money(data.total))}
+        </p>
+
+        <p style="margin:0 0 6px;font-size:13px;color:#a0a0a0">Contacto</p>
+        <p style="margin:0 0 20px;line-height:1.7">
+          ${esc(data.customerName)}<br>
+          <a href="https://wa.me/${esc(data.customerPhone.replace(/\D/g, ""))}" style="color:#00f0ff">
+            ${esc(data.customerPhone)}
+          </a>
+          ${data.customerEmail ? `<br>${esc(data.customerEmail)}` : ""}
+        </p>
+
+        <p style="margin:0 0 6px;font-size:13px;color:#a0a0a0">Productos</p>
+        <table style="width:100%;border-collapse:collapse;margin:0 0 20px">
+          ${data.items
+            .map(
+              (i) => `<tr>
+            <td style="padding:6px 0;color:#f0f0f0">${esc(i.quantity)}x ${esc(i.name)}</td>
+            <td style="padding:6px 0;color:#00f0ff;text-align:right;white-space:nowrap">${esc(money(i.subtotal))}</td>
+          </tr>`
+            )
+            .join("")}
+        </table>
+
+        <p style="margin:0 0 6px;font-size:13px;color:#a0a0a0">Entrega — ${esc(data.shippingLabel)}</p>
+        <p style="margin:0 0 24px;line-height:1.7;color:#f0f0f0">
+          ${data.deliveryLines.map((l) => esc(l)).join("<br>")}
+        </p>
+
+        <a href="${data.adminUrl}"
+           style="display:inline-block;background:#b026ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">
+          Abrir en el panel
+        </a>
+      </div>
+    </div>
+  `;
+
+  return { text, html };
+}

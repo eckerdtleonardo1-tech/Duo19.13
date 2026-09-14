@@ -1,9 +1,39 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { fetchLocalidades, fetchProvincias } from "@/lib/georef";
+import { useMemo, useState } from "react";
+import { fetchLocalidades } from "@/lib/georef";
 import { normalizeText } from "@/lib/text";
 import type { Localidad, Provincia } from "@/types";
+
+// Las 24 jurisdicciones argentinas no cambian: tenerlas fijas evita una
+// llamada de red en cada checkout y que el formulario dependa de una API
+// externa para algo que es constante. Los ids son los de georef.
+const PROVINCIAS: Provincia[] = [
+  { id: "06", nombre: "Buenos Aires" },
+  { id: "10", nombre: "Catamarca" },
+  { id: "22", nombre: "Chaco" },
+  { id: "26", nombre: "Chubut" },
+  { id: "02", nombre: "Ciudad Autónoma de Buenos Aires" },
+  { id: "14", nombre: "Córdoba" },
+  { id: "18", nombre: "Corrientes" },
+  { id: "30", nombre: "Entre Ríos" },
+  { id: "34", nombre: "Formosa" },
+  { id: "38", nombre: "Jujuy" },
+  { id: "42", nombre: "La Pampa" },
+  { id: "46", nombre: "La Rioja" },
+  { id: "50", nombre: "Mendoza" },
+  { id: "54", nombre: "Misiones" },
+  { id: "58", nombre: "Neuquén" },
+  { id: "62", nombre: "Río Negro" },
+  { id: "66", nombre: "Salta" },
+  { id: "70", nombre: "San Juan" },
+  { id: "74", nombre: "San Luis" },
+  { id: "78", nombre: "Santa Cruz" },
+  { id: "82", nombre: "Santa Fe" },
+  { id: "86", nombre: "Santiago del Estero" },
+  { id: "94", nombre: "Tierra del Fuego, Antártida e Islas del Atlántico Sur" },
+  { id: "90", nombre: "Tucumán" }
+];
 
 export function ProvinceCitySelect({
   province,
@@ -16,32 +46,6 @@ export function ProvinceCitySelect({
   onProvinceChange: (nombre: string) => void;
   onCityChange: (nombre: string) => void;
 }) {
-  const [provincias, setProvincias] = useState<Provincia[]>([
-    { id: "06", nombre: "Buenos Aires" },
-    { id: "10", nombre: "Catamarca" },
-    { id: "22", nombre: "Chaco" },
-    { id: "26", nombre: "Chubut" },
-    { id: "02", nombre: "Ciudad Autónoma de Buenos Aires" },
-    { id: "14", nombre: "Córdoba" },
-    { id: "18", nombre: "Corrientes" },
-    { id: "30", nombre: "Entre Ríos" },
-    { id: "34", nombre: "Formosa" },
-    { id: "38", nombre: "Jujuy" },
-    { id: "42", nombre: "La Pampa" },
-    { id: "46", nombre: "La Rioja" },
-    { id: "50", nombre: "Mendoza" },
-    { id: "54", nombre: "Misiones" },
-    { id: "58", nombre: "Neuquén" },
-    { id: "62", nombre: "Río Negro" },
-    { id: "66", nombre: "Salta" },
-    { id: "70", nombre: "San Juan" },
-    { id: "74", nombre: "San Luis" },
-    { id: "78", nombre: "Santa Cruz" },
-    { id: "82", nombre: "Santa Fe" },
-    { id: "86", nombre: "Santiago del Estero" },
-    { id: "94", nombre: "Tierra del Fuego, Antártida e Islas del Atlántico Sur" },
-    { id: "90", nombre: "Tucumán" }
-  ]);
   const [localidades, setLocalidades] = useState<Localidad[]>([]);
   const [showCityOptions, setShowCityOptions] = useState(false);
   const [loadingLocalidades, setLoadingLocalidades] = useState(false);
@@ -50,7 +54,7 @@ export function ProvinceCitySelect({
     onProvinceChange(nombre);
     onCityChange("");
     setLocalidades([]);
-    const provincia = provincias.find((p) => p.nombre === nombre);
+    const provincia = PROVINCIAS.find((p) => p.nombre === nombre);
     if (!provincia) return;
     setLoadingLocalidades(true);
     try {
@@ -80,7 +84,7 @@ export function ProvinceCitySelect({
           className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 text-text-main outline-none focus:border-neon-secondary"
         >
           <option value="">Seleccioná una provincia</option>
-          {provincias.map((p) => (
+          {PROVINCIAS.map((p) => (
             <option key={p.id} value={p.nombre}>
               {p.nombre}
             </option>

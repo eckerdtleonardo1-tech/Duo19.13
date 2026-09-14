@@ -38,8 +38,10 @@ export function Header() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const catalogMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close mobile menu on route change
+  // Cerrar el menú al cambiar de ruta: es sincronizar con el router, que es
+  // estado externo a React, y no hay forma de derivarlo del render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
     setMobileCategoriesOpen(false);
   }, [pathname]);

@@ -107,7 +107,7 @@ export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] })
 
       {filteredOrders.length === 0 ? (
         <p className="text-text-muted py-8 text-center bg-bg-card rounded-lg border border-border">
-          No hay pedidos para el estado "{activeTab}".
+          No hay pedidos para el estado &quot;{activeTab}&quot;.
         </p>
       ) : (
         <OrdersTable

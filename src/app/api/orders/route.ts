@@ -3,8 +3,12 @@ import { AuthError, requireAdmin, requireUser } from "@/lib/auth";
 import { createOrder, listOrders, OrderError } from "@/lib/orders";
 import { buildOrderMessage, buildWhatsappUrl } from "@/lib/whatsapp";
 import { isShippingMethod, shippingMethodLabel, type ShippingMethod } from "@/lib/shipping";
-import { buildOrderConfirmationEmail, sendMail } from "@/lib/mailer";
-import { BUSINESS_NAME } from "@/lib/constants";
+import {
+  buildNewOrderNotice,
+  buildOrderConfirmationEmail,
+  sendMail,
+} from "@/lib/mailer";
+import { BUSINESS_NAME, CONTACT_EMAIL, SITE_URL } from "@/lib/constants";
 
 // Límites de longitud para campos de texto del pedido
 const FIELD_LIMITS = {
@@ -164,6 +168,25 @@ export async function POST(request: Request) {
       whatsappUrl,
     });
 
+    // Aviso a la tienda: si el handoff a WhatsApp falla del lado del cliente,
+    // este mail es la única señal de que entró una venta.
+    void sendNewOrderNotice({
+      orderId: order.id,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerEmail: order.customerEmail,
+      items: messageItems,
+      total: order.totalAmount,
+      shippingLabel: shippingMethodLabel(order.shippingMethod),
+      deliveryLines: isPickup
+        ? ["Retiro en local."]
+        : [
+            order.customerAddress,
+            `${order.customerCity}, ${order.customerProvince} (CP ${order.customerPostalCode})`,
+          ].filter((line): line is string => Boolean(line)),
+      adminUrl: `${SITE_URL}/admin/orders`,
+    });
+
     return NextResponse.json({ order, whatsappUrl }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -186,5 +209,21 @@ async function sendOrderEmail(
     await sendMail(to, `Tu pedido #${data.orderId} en ${BUSINESS_NAME}`, html, text);
   } catch (error) {
     console.error(`No se pudo enviar el mail del pedido #${data.orderId}:`, error);
+  }
+}
+
+async function sendNewOrderNotice(
+  data: Parameters<typeof buildNewOrderNotice>[0]
+) {
+  try {
+    const { text, html } = buildNewOrderNotice(data);
+    await sendMail(
+      CONTACT_EMAIL,
+      `Nuevo pedido #${data.orderId} — ${BUSINESS_NAME}`,
+      html,
+      text
+    );
+  } catch (error) {
+    console.error(`No se pudo avisar del pedido #${data.orderId}:`, error);
   }
 }
