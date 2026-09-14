@@ -65,6 +65,8 @@ export interface Order {
   customerPostalCode?: string | null;
   shippingMethod: ShippingMethod;
   shippingCost: number;
+  /** El envío se cotiza aparte: shippingCost todavía no es el precio final. */
+  shippingToArrange: boolean;
   subtotalAmount: number;
   totalAmount: number;
   status: OrderStatus;

@@ -99,6 +99,7 @@ export interface OrderEmailData {
   subtotal: number;
   shippingLabel: string;
   shippingCost: number;
+  shippingToArrange: boolean;
   total: number;
   deliveryLines: string[];
   whatsappUrl: string;
@@ -120,8 +121,14 @@ export function buildOrderConfirmationEmail(data: OrderEmailData) {
     ...itemLines,
     "",
     `Subtotal: ${money(data.subtotal)}`,
-    `${data.shippingLabel}: ${data.shippingCost === 0 ? "sin cargo" : money(data.shippingCost)}`,
-    `Total: ${money(data.total)}`,
+    `${data.shippingLabel}: ${
+      data.shippingToArrange
+        ? "a convenir, te lo pasamos por WhatsApp"
+        : data.shippingCost === 0
+          ? "sin cargo"
+          : money(data.shippingCost)
+    }`,
+    `${data.shippingToArrange ? "Total sin envío" : "Total"}: ${money(data.total)}`,
     "",
     ...data.deliveryLines,
     "",
@@ -164,7 +171,11 @@ export function buildOrderConfirmationEmail(data: OrderEmailData) {
           <tr>
             <td style="padding:8px 0;color:#a0a0a0">${esc(data.shippingLabel)}</td>
             <td style="padding:8px 0;text-align:right">${
-              data.shippingCost === 0 ? "Sin cargo" : money(data.shippingCost)
+              data.shippingToArrange
+                ? "A convenir"
+                : data.shippingCost === 0
+                  ? "Sin cargo"
+                  : money(data.shippingCost)
             }</td>
           </tr>
           <tr>

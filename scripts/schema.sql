@@ -151,3 +151,8 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 );
 CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash);
 CREATE INDEX IF NOT EXISTS idx_email_verifications_user ON email_verifications(user_id);
+
+-- Envío pendiente de cotizar. Sin esta marca, un pedido "a convenir" queda
+-- guardado con shipping_cost = 0 y en el panel se lee igual que uno con envío
+-- sin cargo, con el riesgo de despacharlo gratis por error.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_to_arrange BOOLEAN NOT NULL DEFAULT false;

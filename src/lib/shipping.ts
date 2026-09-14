@@ -20,8 +20,16 @@ export const SHIPPING_RATES = {
   patagonia: 13500,
 } as const;
 
-/** A partir de este subtotal el envío no se cobra. */
-export const FREE_SHIPPING_THRESHOLD = 250000;
+/**
+ * A partir de este subtotal el envío se cotiza aparte por WhatsApp.
+ *
+ * Las tarifas de abajo son planas por provincia y no miran peso ni volumen.
+ * Sirven para lo chico, pero un pedido grande suele incluir algo voluminoso
+ * (una silla, por ejemplo) cuyo despacho cuesta bastante más que cualquiera de
+ * esas tarifas. Antes estos pedidos viajaban gratis, que era el peor caso
+ * posible: justo los más caros de despachar no cobraban nada.
+ */
+export const SHIPPING_QUOTE_THRESHOLD = 250000;
 
 type Zone = keyof typeof SHIPPING_RATES;
 
@@ -85,9 +93,10 @@ export function zoneLabel(province: string): string | null {
 
 export interface ShippingQuote {
   cost: number;
+  /** Retiro en local: no hay envío que cobrar. */
   isFree: boolean;
-  /** Cuánto falta para alcanzar el envío gratis (0 si ya llegó o es retiro). */
-  missingForFree: number;
+  /** El costo se acuerda por WhatsApp; `cost` todavía no es el precio final. */
+  toBeArranged: boolean;
 }
 
 /**
@@ -103,21 +112,17 @@ export function quoteShipping(
   subtotal: number
 ): ShippingQuote {
   if (method === "retiro") {
-    return { cost: 0, isFree: true, missingForFree: 0 };
+    return { cost: 0, isFree: true, toBeArranged: false };
   }
 
-  if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-    return { cost: 0, isFree: true, missingForFree: 0 };
+  if (subtotal >= SHIPPING_QUOTE_THRESHOLD) {
+    return { cost: 0, isFree: false, toBeArranged: true };
   }
 
   const zone = province ? zoneForProvince(province) : null;
   const cost = zone ? SHIPPING_RATES[zone] : SHIPPING_RATES.patagonia;
 
-  return {
-    cost,
-    isFree: false,
-    missingForFree: Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal),
-  };
+  return { cost, isFree: false, toBeArranged: false };
 }
 
 export function shippingMethodLabel(method: ShippingMethod): string {

@@ -16,6 +16,7 @@ function mapOrderRow(row: Record<string, unknown>): Order {
     customerPostalCode: (row.customer_postal_code as string) ?? null,
     shippingMethod: (row.shipping_method as ShippingMethod) ?? "envio",
     shippingCost: Number(row.shipping_cost ?? 0),
+    shippingToArrange: Boolean(row.shipping_to_arrange),
     subtotalAmount: Number(row.subtotal_amount ?? row.total_amount ?? 0),
     totalAmount: Number(row.total_amount),
     status: row.status as OrderStatus,
@@ -108,8 +109,9 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
       `INSERT INTO orders
         (user_id, customer_name, customer_phone, customer_email, customer_address,
          customer_province, customer_city, customer_postal_code,
-         shipping_method, shipping_cost, subtotal_amount, total_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         shipping_method, shipping_cost, shipping_to_arrange,
+         subtotal_amount, total_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
       [
         input.userId,
@@ -122,6 +124,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
         input.customerPostalCode || null,
         input.shippingMethod,
         shipping.cost,
+        shipping.toBeArranged,
         subtotal,
         total,
       ]

@@ -19,6 +19,7 @@ export interface OrderMessageData {
   customerPostalCode?: string | null;
   shippingMethod: ShippingMethod;
   shippingCost: number;
+  shippingToArrange: boolean;
   subtotal: number;
   items: OrderMessageItem[];
   total: number;
@@ -48,9 +49,18 @@ export function buildOrderMessage(data: OrderMessageData): string {
     "",
     `Subtotal: ${formatCurrency(data.subtotal)}`,
     `${shippingMethodLabel(data.shippingMethod)}: ${
-      data.shippingCost === 0 ? "sin cargo" : formatCurrency(data.shippingCost)
+      data.shippingToArrange
+        ? "a convenir"
+        : data.shippingCost === 0
+          ? "sin cargo"
+          : formatCurrency(data.shippingCost)
     }`,
-    `*Total a pagar: ${formatCurrency(data.total)}*`,
+    data.shippingToArrange
+      ? `*Total sin envío: ${formatCurrency(data.total)}*`
+      : `*Total a pagar: ${formatCurrency(data.total)}*`,
+    data.shippingToArrange
+      ? "(Necesito que me pasen el costo del envío para cerrar el total.)"
+      : null,
     "",
     `*Mis datos:*`,
     `Nombre: ${data.customerName}`,

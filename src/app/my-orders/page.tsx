@@ -43,10 +43,16 @@ export default async function MyOrdersPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex justify-end border-t border-border pt-2 text-sm">
+              <div className="mt-3 flex flex-col items-end gap-1 border-t border-border pt-2 text-sm">
                 <span className="text-text-main">
-                  Total: <span className="text-neon-secondary">{formatCurrency(order.totalAmount)}</span>
+                  {order.shippingToArrange ? "Total sin envío" : "Total"}:{" "}
+                  <span className="text-neon-secondary">{formatCurrency(order.totalAmount)}</span>
                 </span>
+                {order.shippingToArrange && (
+                  <span className="text-xs text-text-muted">
+                    El envío de este pedido se coordina por WhatsApp.
+                  </span>
+                )}
               </div>
             </div>
           ))}

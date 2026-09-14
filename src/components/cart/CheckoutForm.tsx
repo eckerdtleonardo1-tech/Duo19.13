@@ -9,7 +9,7 @@ import { ProvinceCitySelect } from "@/components/cart/ProvinceCitySelect";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { formatCurrency } from "@/lib/format";
 import {
-  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_QUOTE_THRESHOLD,
   quoteShipping,
   zoneLabel,
   type ShippingMethod,
@@ -127,11 +127,11 @@ export function CheckoutForm() {
             icon={<Truck size={18} aria-hidden="true" />}
             title="Envío a domicilio"
             detail={
-              province
-                ? shipping.isFree
-                  ? "Sin cargo"
-                  : `${formatCurrency(shipping.cost)} · ${zoneLabel(province) ?? "Resto del país"}`
-                : "Elegí la provincia para ver el costo"
+              shipping.toBeArranged
+                ? "A convenir por WhatsApp"
+                : province
+                  ? `${formatCurrency(shipping.cost)} · ${zoneLabel(province) ?? "Resto del país"}`
+                  : "Elegí la provincia para ver el costo"
             }
           />
 
@@ -144,10 +144,11 @@ export function CheckoutForm() {
           />
         </fieldset>
 
-        {!isPickup && !shipping.isFree && shipping.missingForFree > 0 && (
+        {shipping.toBeArranged && (
           <p className="rounded-lg border border-neon-secondary/30 bg-neon-secondary/5 px-3 py-2 text-xs text-neon-secondary">
-            Te faltan {formatCurrency(shipping.missingForFree)} para el envío gratis
-            (compras desde {formatCurrency(FREE_SHIPPING_THRESHOLD)}).
+            En compras desde {formatCurrency(SHIPPING_QUOTE_THRESHOLD)} el envío se cotiza
+            aparte: te pasamos el costo por WhatsApp antes de que pagues. El total de acá
+            abajo todavía no lo incluye.
           </p>
         )}
 
@@ -237,12 +238,26 @@ export function CheckoutForm() {
           </div>
           <div className="flex items-center justify-between">
             <dt className="text-text-muted">{isPickup ? "Retiro en local" : "Envío"}</dt>
-            <dd className={shipping.isFree ? "text-neon-success" : "text-text-main"}>
-              {shipping.isFree ? "Sin cargo" : formatCurrency(shipping.cost)}
+            <dd
+              className={
+                shipping.toBeArranged
+                  ? "text-neon-secondary"
+                  : shipping.isFree
+                    ? "text-neon-success"
+                    : "text-text-main"
+              }
+            >
+              {shipping.toBeArranged
+                ? "A convenir"
+                : shipping.isFree
+                  ? "Sin cargo"
+                  : formatCurrency(shipping.cost)}
             </dd>
           </div>
           <div className="flex items-center justify-between border-t border-border pt-2">
-            <dt className="font-[family-name:var(--font-heading)] text-text-main">Total</dt>
+            <dt className="font-[family-name:var(--font-heading)] text-text-main">
+              {shipping.toBeArranged ? "Total sin envío" : "Total"}
+            </dt>
             <dd className="font-[family-name:var(--font-heading)] text-lg font-bold text-neon-secondary">
               {formatCurrency(total)}
             </dd>

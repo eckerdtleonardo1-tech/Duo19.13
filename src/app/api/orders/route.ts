@@ -143,6 +143,7 @@ export async function POST(request: Request) {
         customerPostalCode: order.customerPostalCode,
         shippingMethod: order.shippingMethod,
         shippingCost: order.shippingCost,
+        shippingToArrange: order.shippingToArrange,
         subtotal: order.subtotalAmount,
         items: messageItems,
         total: order.totalAmount,
@@ -158,6 +159,7 @@ export async function POST(request: Request) {
       subtotal: order.subtotalAmount,
       shippingLabel: shippingMethodLabel(order.shippingMethod),
       shippingCost: order.shippingCost,
+      shippingToArrange: order.shippingToArrange,
       total: order.totalAmount,
       deliveryLines: isPickup
         ? ["Retiro en local: coordinamos el punto de retiro por WhatsApp."]
