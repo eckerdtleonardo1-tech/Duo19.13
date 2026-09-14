@@ -11,7 +11,7 @@ export const SITE_URL =
 export const WHATSAPP_NUMBER = "5493329534029";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 export const CONTACT_EMAIL = "duality19.13@gmail.com";
-export const INSTAGRAM_USER = "duo19.13";
+export const INSTAGRAM_USER = "duogaming19.13";
 export const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_USER}`;
 
 export const CATEGORIES = [

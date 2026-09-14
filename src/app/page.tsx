@@ -17,7 +17,7 @@ import {
 import { JsonLd } from "@/components/seo/JsonLd";
 import { FeaturedCarousel } from "@/components/products/FeaturedCarousel";
 import { listProducts } from "@/lib/products";
-import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
+import { BUSINESS_NAME, INSTAGRAM_URL, SITE_URL } from "@/lib/constants";
 
 export const revalidate = 60;
 
@@ -44,6 +44,8 @@ const JSON_LD = {
   "@type": "Store",
   name: BUSINESS_NAME,
   url: SITE_URL,
+  // sameAs asocia las cuentas oficiales con el negocio en los resultados.
+  sameAs: [INSTAGRAM_URL],
   description: "Tienda de setup gamer en Argentina: teclados, mouses, auriculares, sillas, iluminación RGB y accesorios para PC.",
   currenciesAccepted: "ARS",
   paymentAccepted: "Transferencia bancaria, efectivo",
