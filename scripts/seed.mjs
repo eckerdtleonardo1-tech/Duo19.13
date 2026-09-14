@@ -45,7 +45,7 @@ const pool = new pg.Pool({
   ssl: isLocalDb ? undefined : { rejectUnauthorized: false },
 });
 
-const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || "admin@duo1913.com";
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || "duality19.13@gmail.com";
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "admin123";
 
 const DEMO_PRODUCTS = [
