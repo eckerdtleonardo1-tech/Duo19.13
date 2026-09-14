@@ -9,11 +9,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-[family-name:var(--font-heading)] text-2xl text-neon-primary">
+      {/* En teléfono el título y el menú se pisaban y "Pedidos" quedaba
+          cortado fuera de pantalla, así que se apilan. */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="font-[family-name:var(--font-heading)] text-xl text-neon-primary sm:text-2xl">
           Panel de Administración
         </h1>
-        <nav className="flex gap-4 text-sm">
+        <nav className="flex flex-wrap gap-4 text-sm">
           <Link href="/admin" className="text-text-muted hover:text-neon-secondary">
             Panel
           </Link>

@@ -28,7 +28,73 @@ export function OrdersTable({
   onDelete: (order: Order) => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <>
+      {/* Teléfono: tarjetas. En la tabla, el estado y las acciones quedaban
+          fuera de pantalla y había que descubrir el scroll horizontal. */}
+      <ul className="flex flex-col gap-3 md:hidden">
+        {orders.map((order) => (
+          <li key={order.id} className="rounded-lg border border-border bg-bg-card p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-text-main">
+                  #{order.id} · {order.customerName}
+                </p>
+                <p className="mt-0.5 text-xs text-text-muted">
+                  {order.customerPhone}
+                  {order.customerEmail ? ` · ${order.customerEmail}` : ""}
+                </p>
+                {(order.customerCity || order.customerProvince) && (
+                  <p className="text-xs text-text-muted">
+                    {[order.customerCity, order.customerProvince].filter(Boolean).join(", ")}
+                  </p>
+                )}
+                <p className="mt-0.5 text-xs text-text-muted">{formatDate(order.createdAt)}</p>
+              </div>
+              <p className="whitespace-nowrap text-sm font-semibold text-neon-secondary">
+                {formatCurrency(order.totalAmount)}
+              </p>
+            </div>
+
+            <div className="mt-3 border-t border-border pt-3">
+              <label className="block text-xs text-text-muted">
+                Estado
+                <select
+                  value={order.status}
+                  onChange={(e) => onStatusChange(order, e.target.value)}
+                  className="mt-1 w-full rounded border border-border bg-bg-dark px-2 py-1.5 text-sm text-text-main outline-none focus:border-neon-secondary"
+                >
+                  {ORDER_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => onArchiveToggle(order)}
+                  className="rounded border border-border px-2 py-1 text-xs hover:border-neon-secondary"
+                >
+                  {order.archived ? "Desarchivar" : "Archivar"}
+                </button>
+                <OrderReceiptButton order={order} />
+                {order.status === "Cancelado" && (
+                  <button
+                    onClick={() => onDelete(order)}
+                    className="rounded border border-danger px-2 py-1 text-xs text-danger hover:bg-danger/10"
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Tablet y escritorio */}
+      <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="bg-bg-card text-text-muted">
           <tr>
@@ -95,6 +161,7 @@ export function OrdersTable({
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
