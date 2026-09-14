@@ -31,7 +31,10 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       // Allow images from self and any HTTPS source (products come from external CDNs)
       "img-src 'self' data: https:",
-      "connect-src 'self'",
+      // El selector de ciudad del checkout consulta la API de georef desde el
+      // navegador. Con 'self' a secas el navegador bloquea esa llamada y el
+      // autocompletado queda mudo sin dar ningún error visible.
+      "connect-src 'self' https://apis.datos.gob.ar",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
