@@ -49,6 +49,18 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+/**
+ * Estados que representan una venta concretada.
+ *
+ * Un pedido se crea antes de pagar —el pago se arregla por WhatsApp después—,
+ * así que "En preparación" todavía no es plata en el bolsillo: puede quedar en
+ * la nada. Sólo lo enviado o entregado implica que la operación se cerró.
+ *
+ * Lo usan las métricas del panel y la validación de compra de las reseñas:
+ * tienen que moverse juntos, por eso viven acá y no en cada archivo.
+ */
+export const FULFILLED_ORDER_STATUSES: OrderStatus[] = ["Enviado", "Entregado"];
+
 // ── Datos legales ───────────────────────────────────────────────────────────
 // COMPLETAR antes de publicar. Las páginas legales muestran estos valores tal
 // cual y son obligatorios para vender online en Argentina (Ley 24.240 de

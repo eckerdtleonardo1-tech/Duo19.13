@@ -1,7 +1,9 @@
 import { pool } from "@/lib/db";
-import { ORDER_STATUSES, type OrderStatus } from "@/lib/constants";
-
-const CANCELLED: OrderStatus = "Cancelado";
+import {
+  FULFILLED_ORDER_STATUSES,
+  ORDER_STATUSES,
+  type OrderStatus,
+} from "@/lib/constants";
 
 /** Umbral a partir del cual un producto se considera con stock bajo. */
 export const LOW_STOCK_THRESHOLD = 5;
@@ -32,8 +34,10 @@ export interface DashboardStats {
  * Todas las métricas del panel en un solo viaje: las consultas son
  * independientes entre sí, así que van en paralelo sobre el pool.
  *
- * Los pedidos cancelados no cuentan como venta, pero sí siguen apareciendo en
- * el desglose por estado.
+ * Sólo cuentan como venta los pedidos enviados o entregados: los que están
+ * en preparación todavía pueden no pagarse nunca, y contarlos infla la
+ * facturación con plata que no entró. Todos siguen apareciendo en el desglose
+ * por estado y en los últimos pedidos.
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [revenue, byStatus, products, low, top, recent, customers] = await Promise.all([
@@ -44,8 +48,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
          COALESCE(SUM(total_amount) FILTER (WHERE created_at >= date_trunc('month', now())), 0) AS revenue_month,
          COUNT(*) FILTER (WHERE created_at >= date_trunc('month', now()))          AS orders_month
        FROM orders
-       WHERE status <> $1`,
-      [CANCELLED]
+       WHERE status = ANY($1)`,
+      [FULFILLED_ORDER_STATUSES]
     ),
     pool.query("SELECT status, COUNT(*)::int AS count FROM orders GROUP BY status"),
     pool.query(
@@ -67,11 +71,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
               SUM(oi.quantity * oi.unit_price)::numeric   AS revenue
        FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
-       WHERE o.status <> $1
+       WHERE o.status = ANY($1)
        GROUP BY oi.product_id, oi.product_name
        ORDER BY units DESC
        LIMIT 5`,
-      [CANCELLED]
+      [FULFILLED_ORDER_STATUSES]
     ),
     pool.query(
       `SELECT id, customer_name, total_amount, status, created_at

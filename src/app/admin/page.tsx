@@ -41,7 +41,7 @@ export default async function AdminDashboardPage() {
           icon={<DollarSign size={18} aria-hidden="true" />}
           label="Ventas totales"
           value={formatCurrency(stats.revenueTotal)}
-          detail={`${stats.ordersTotal} pedido${stats.ordersTotal !== 1 ? "s" : ""} (sin cancelados)`}
+          detail={`${stats.ordersTotal} pedido${stats.ordersTotal !== 1 ? "s" : ""} enviado${stats.ordersTotal !== 1 ? "s" : ""} o entregado${stats.ordersTotal !== 1 ? "s" : ""}`}
           accent="text-neon-success"
         />
         <StatCard
@@ -55,7 +55,7 @@ export default async function AdminDashboardPage() {
           icon={<ShoppingBag size={18} aria-hidden="true" />}
           label="Ticket promedio"
           value={formatCurrency(stats.averageOrderValue)}
-          detail={`${stats.pendingOrders} en preparación`}
+          detail={`${stats.pendingOrders} en preparación (sin contar)`}
           accent="text-neon-primary"
         />
         <StatCard
