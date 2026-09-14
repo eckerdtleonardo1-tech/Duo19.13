@@ -50,8 +50,28 @@ como referencia de branding y contenido.
 - `npm run dev` — servidor de desarrollo
 - `npm run build` / `npm run start` — build y servidor de producción
 - `npm run lint` — ESLint
+- `npm test` — tests (una corrida)
+- `npm run test:watch` — tests en modo watch mientras programás
 - `npm run db:migrate` — aplica `scripts/schema.sql` contra `DATABASE_URL`
 - `npm run seed` — crea el usuario admin y productos demo
+
+## Tests
+
+`npm test` corre la suite con Vitest. Cubren la lógica de negocio pura, que
+es donde un error cuesta plata o abre un agujero:
+
+- **Envío** (`src/lib/shipping.test.ts`): tarifas por zona, provincia
+  desconocida cayendo en la tarifa más cara, y que las compras grandes queden
+  "a convenir" y no gratis.
+- **Mails** (`src/lib/mailer.test.ts`): que un nombre o producto con
+  etiquetas HTML no se inyecte en el mensaje, y que un envío a convenir nunca
+  diga "sin cargo".
+- **WhatsApp** (`src/lib/whatsapp.test.ts`): el formato del pedido.
+- **Validación** (`src/lib/validation.test.ts`): límites de imágenes y textos.
+- **Texto** (`src/lib/text.test.ts`): búsqueda sin tildes.
+
+Lo que toca la base de datos (pedidos, stock, reseñas, métricas) no está
+cubierto: haría falta una base de prueba aparte para no ensuciar la real.
 
 ## Estructura
 
