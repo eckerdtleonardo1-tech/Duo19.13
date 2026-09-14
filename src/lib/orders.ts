@@ -288,3 +288,29 @@ export async function updateOrderArchived(id: number, archived: boolean): Promis
   );
   return rows.length ? mapOrderRow(rows[0]) : null;
 }
+
+/**
+ * Borra un pedido definitivamente. Sólo se permite sobre cancelados.
+ *
+ * La restricción es a propósito: un pedido activo es plata pendiente y su
+ * historial no debería poder evaporarse de un click. Cancelar ya devolvió el
+ * stock, así que borrar acá no toca inventario. Los order_items se van solos
+ * por la cascada de la foreign key.
+ */
+export async function deleteOrder(id: number): Promise<Order | null> {
+  const { rows } = await pool.query("SELECT status FROM orders WHERE id = $1", [id]);
+  if (rows.length === 0) return null;
+
+  if (rows[0].status !== CANCELLED_STATUS) {
+    throw new OrderError(
+      409,
+      "Sólo se pueden eliminar pedidos cancelados. Cancelalo primero."
+    );
+  }
+
+  const { rows: deleted } = await pool.query(
+    "DELETE FROM orders WHERE id = $1 RETURNING *",
+    [id]
+  );
+  return deleted.length ? mapOrderRow(deleted[0]) : null;
+}

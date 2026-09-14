@@ -20,10 +20,12 @@ export function OrdersTable({
   orders,
   onStatusChange,
   onArchiveToggle,
+  onDelete,
 }: {
   orders: Order[];
   onStatusChange: (order: Order, status: string) => void;
   onArchiveToggle: (order: Order) => void;
+  onDelete: (order: Order) => void;
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
@@ -77,6 +79,16 @@ export function OrdersTable({
                     {order.archived ? "Desarchivar" : "Archivar"}
                   </button>
                   <OrderReceiptButton order={order} />
+                  {/* Sólo los cancelados se pueden borrar: un pedido activo es
+                      plata pendiente y no debería desaparecer de un click. */}
+                  {order.status === "Cancelado" && (
+                    <button
+                      onClick={() => onDelete(order)}
+                      className="rounded border border-danger px-2 py-1 text-xs text-danger hover:bg-danger/10"
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

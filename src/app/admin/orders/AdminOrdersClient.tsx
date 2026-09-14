@@ -61,6 +61,26 @@ export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] })
     return acc;
   }, { "Todos": 0 } as Record<string, number>);
 
+  async function handleDelete(order: Order) {
+    if (
+      !confirm(
+        `¿Eliminar el pedido #${order.id} de ${order.customerName}? Esta acción no se puede deshacer.`
+      )
+    ) {
+      return;
+    }
+
+    const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      showToast(data?.error ?? "No se pudo eliminar el pedido", "error");
+      return;
+    }
+
+    setOrders((prev) => prev.filter((o) => o.id !== order.id));
+    showToast(`Pedido #${order.id} eliminado`);
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -114,6 +134,7 @@ export function AdminOrdersClient({ initialOrders }: { initialOrders: Order[] })
           orders={filteredOrders}
           onStatusChange={handleStatusChange}
           onArchiveToggle={handleArchiveToggle}
+          onDelete={handleDelete}
         />
       )}
     </div>
