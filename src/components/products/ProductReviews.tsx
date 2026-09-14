@@ -19,11 +19,14 @@ const formatDate = (iso: string) =>
 export function ProductReviews({
   productId,
   reviews,
+  canReview,
   ratingAverage,
   ratingCount,
 }: {
   productId: number;
   reviews: Review[];
+  /** Sólo quien compró el producto puede opinar. Lo resuelve el servidor. */
+  canReview: boolean;
   ratingAverage: number;
   ratingCount: number;
 }) {
@@ -146,15 +149,29 @@ export function ProductReviews({
             </p>
           )}
 
-          {!formOpen && (
-            <button
-              type="button"
-              onClick={() => (user ? setFormOpen(true) : setLoginOpen(true))}
-              className="mt-6 w-full rounded-lg border border-neon-secondary/40 px-4 py-2.5 text-sm text-neon-secondary transition-colors hover:bg-neon-secondary/10"
-            >
-              {ownReview ? "Editar mi reseña" : "Escribir una reseña"}
-            </button>
-          )}
+          {!formOpen &&
+            (!user ? (
+              <button
+                type="button"
+                onClick={() => setLoginOpen(true)}
+                className="mt-6 w-full rounded-lg border border-neon-secondary/40 px-4 py-2.5 text-sm text-neon-secondary transition-colors hover:bg-neon-secondary/10"
+              >
+                Iniciá sesión para opinar
+              </button>
+            ) : canReview || ownReview ? (
+              <button
+                type="button"
+                onClick={() => setFormOpen(true)}
+                className="mt-6 w-full rounded-lg border border-neon-secondary/40 px-4 py-2.5 text-sm text-neon-secondary transition-colors hover:bg-neon-secondary/10"
+              >
+                {ownReview ? "Editar mi reseña" : "Escribir una reseña"}
+              </button>
+            ) : (
+              <p className="mt-6 rounded-lg border border-border bg-bg-dark px-4 py-3 text-center text-xs text-text-muted">
+                Las opiniones son de compradores verificados: vas a poder dejar la
+                tuya cuando recibas este producto.
+              </p>
+            ))}
         </div>
 
         {/* ── Formulario + listado ────────────────────────────────── */}

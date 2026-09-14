@@ -135,3 +135,19 @@ ALTER TABLE orders ALTER COLUMN customer_city DROP NOT NULL;
 -- marca se rechazan, así un cambio de contraseña cierra las sesiones abiertas
 -- (por ejemplo, la de alguien que te había robado la cuenta).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Verificación de email.
+-- Igual que password_resets: sólo se guarda el hash del token, nunca el valor
+-- que viaja en el mail.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS email_verifications (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user ON email_verifications(user_id);

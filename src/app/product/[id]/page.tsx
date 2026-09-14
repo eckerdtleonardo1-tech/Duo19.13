@@ -9,8 +9,9 @@ import { AddToCartPanel } from "@/components/products/AddToCartPanel";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ProductReviews } from "@/components/products/ProductReviews";
 import { StarRating } from "@/components/products/StarRating";
+import { getSessionUser } from "@/lib/auth";
 import { getProductById, listRelatedProducts } from "@/lib/products";
-import { listReviewsForProduct } from "@/lib/reviews";
+import { hasPurchased, listReviewsForProduct } from "@/lib/reviews";
 import { formatCurrency } from "@/lib/format";
 import { BUSINESS_NAME, SITE_URL, WHATSAPP_URL, categoryLabel } from "@/lib/constants";
 import type { Product } from "@/types";
@@ -80,9 +81,11 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
 
   if (!product) notFound();
 
-  const [related, reviews] = await Promise.all([
+  const user = await getSessionUser();
+  const [related, reviews, canReview] = await Promise.all([
     listRelatedProducts(product),
     listReviewsForProduct(product.id),
+    user ? hasPurchased(product.id, user.id) : Promise.resolve(false),
   ]);
   const categoryHref = `/catalog?category=${encodeURIComponent(product.category)}`;
   const label = categoryLabel(product.category);
@@ -245,6 +248,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[id]">
         <ProductReviews
           productId={product.id}
           reviews={reviews}
+          canReview={canReview}
           ratingAverage={product.ratingAverage}
           ratingCount={product.ratingCount}
         />

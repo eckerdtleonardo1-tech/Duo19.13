@@ -77,14 +77,24 @@ export async function deleteReview(productId: number, userId: number): Promise<b
  * Si el usuario compró el producto se muestra "compra verificada". Se cuenta
  * cualquier pedido que no esté cancelado.
  */
+/**
+ * Estados que prueban que la compra se concretó de verdad.
+ *
+ * No alcanza con que el pedido exista: se crea antes de pagar (el pago se
+ * arregla por WhatsApp después), así que aceptar "En preparación" dejaría que
+ * cualquiera se autohabilite a reseñar armando un pedido que nunca va a pagar.
+ * Un pedido enviado o entregado, en cambio, implica que hubo plata de por medio.
+ */
+const FULFILLED_STATUSES = ["Enviado", "Entregado"];
+
 export async function hasPurchased(productId: number, userId: number): Promise<boolean> {
   const { rows } = await pool.query(
     `SELECT 1
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
-     WHERE oi.product_id = $1 AND o.user_id = $2 AND o.status <> 'Cancelado'
+     WHERE oi.product_id = $1 AND o.user_id = $2 AND o.status = ANY($3)
      LIMIT 1`,
-    [productId, userId]
+    [productId, userId, FULFILLED_STATUSES]
   );
   return rows.length > 0;
 }

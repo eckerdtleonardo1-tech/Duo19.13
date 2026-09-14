@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { hashPassword, setSessionCookie } from "@/lib/auth";
 import { getClientIp, isRegisterLocked, recordRegisterAttempt } from "@/lib/rateLimit";
+import { createVerificationToken } from "@/lib/emailVerification";
+import { buildEmailVerificationEmail, sendMail } from "@/lib/mailer";
+import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
 
 // Límites de longitud para campos de texto
 const MIN_PASSWORD_LENGTH = 8;
@@ -69,6 +72,11 @@ export async function POST(request: Request) {
   // Registrar el intento exitoso para el rate limit
   await recordRegisterAttempt(ip);
 
+  // La verificación no bloquea nada: la cuenta queda usable al instante. Sirve
+  // para confirmar que la dirección existe, que es de lo que dependen el mail
+  // del pedido y la recuperación de contraseña.
+  void sendVerificationEmail(user.id, user.name, user.email);
+
   await setSessionCookie({
     sub: user.id,
     email: user.email,
@@ -80,4 +88,17 @@ export async function POST(request: Request) {
     { user: { id: user.id, name: user.name, email: user.email, isAdmin: user.is_admin } },
     { status: 201 }
   );
+}
+
+async function sendVerificationEmail(userId: number, name: string, email: string) {
+  try {
+    const token = await createVerificationToken(userId);
+    const { text, html } = buildEmailVerificationEmail(
+      name,
+      `${SITE_URL}/verify-email?token=${token}`
+    );
+    await sendMail(email, `Confirmá tu email — ${BUSINESS_NAME}`, html, text);
+  } catch (error) {
+    console.error("No se pudo enviar el mail de verificación:", error);
+  }
 }

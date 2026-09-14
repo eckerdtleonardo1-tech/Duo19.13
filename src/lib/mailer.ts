@@ -285,3 +285,49 @@ export function buildNewOrderNotice(data: NewOrderNoticeData) {
 
   return { text, html };
 }
+
+// ── Verificación de email ────────────────────────────────────────────────────
+
+export function buildEmailVerificationEmail(name: string, verifyUrl: string) {
+  const text = [
+    `Hola ${name},`,
+    "",
+    `Creaste una cuenta en ${BUSINESS_NAME}. Confirmá tu email entrando acá:`,
+    verifyUrl,
+    "",
+    "El link vence en 48 horas.",
+    "",
+    "Si no creaste ninguna cuenta, podés ignorar este mail.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#0a0a0f;padding:32px;color:#f0f0f0">
+      <div style="max-width:480px;margin:0 auto;background:#14141f;border:1px solid #2a2a35;border-radius:12px;padding:32px">
+        <p style="font-size:22px;font-weight:bold;margin:0 0 24px">
+          Duo19<span style="color:#b026ff">-</span>13
+        </p>
+        <p style="margin:0 0 16px">Hola ${esc(name)},</p>
+        <p style="margin:0 0 16px;color:#a0a0a0">
+          Creaste una cuenta en ${BUSINESS_NAME}. Confirmá tu email para que
+          podamos mandarte el detalle de tus pedidos y, si alguna vez la
+          necesitás, la recuperación de tu contraseña.
+        </p>
+        <p style="margin:24px 0">
+          <a href="${verifyUrl}"
+             style="display:inline-block;background:#b026ff;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold">
+            Confirmar mi email
+          </a>
+        </p>
+        <p style="margin:0 0 8px;color:#a0a0a0;font-size:13px">
+          Si el botón no funciona, copiá esta dirección en tu navegador:
+        </p>
+        <p style="margin:0 0 24px;color:#00f0ff;font-size:12px;word-break:break-all">${verifyUrl}</p>
+        <p style="margin:0;color:#a0a0a0;font-size:13px">
+          El link vence en 48 horas. Si no creaste ninguna cuenta, ignorá este mail.
+        </p>
+      </div>
+    </div>
+  `;
+
+  return { text, html };
+}

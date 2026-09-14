@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { AuthError, requireUser } from "@/lib/auth";
+import { AuthError, getSessionUser, requireUser } from "@/lib/auth";
 import { getProductById } from "@/lib/products";
-import { deleteReview, listReviewsForProduct, upsertReview } from "@/lib/reviews";
+import {
+  deleteReview,
+  hasPurchased,
+  listReviewsForProduct,
+  upsertReview,
+} from "@/lib/reviews";
 import { MAX_COMMENT_LENGTH } from "@/lib/constants";
 
 function parseProductId(raw: string): number | null {
@@ -18,7 +23,15 @@ export async function GET(
   if (!productId) {
     return NextResponse.json({ error: "Producto inválido" }, { status: 400 });
   }
-  return NextResponse.json({ reviews: await listReviewsForProduct(productId) });
+  // canReview viaja en el GET para que la página pueda explicar por qué no se
+  // puede opinar, en vez de dejar al usuario escribir y rebotarlo al enviar.
+  const user = await getSessionUser();
+  const [reviews, canReview] = await Promise.all([
+    listReviewsForProduct(productId),
+    user ? hasPurchased(productId, user.id) : Promise.resolve(false),
+  ]);
+
+  return NextResponse.json({ reviews, canReview });
 }
 
 export async function POST(
@@ -35,6 +48,13 @@ export async function POST(
     }
     if (!(await getProductById(productId))) {
       return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
+    }
+
+    if (!(await hasPurchased(productId, user.id))) {
+      return NextResponse.json(
+        { error: "Solo pueden opinar quienes compraron este producto" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json().catch(() => null);
