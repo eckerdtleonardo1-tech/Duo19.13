@@ -53,16 +53,27 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 // COMPLETAR antes de publicar. Las páginas legales muestran estos valores tal
 // cual y son obligatorios para vender online en Argentina (Ley 24.240 de
 // Defensa del Consumidor y Resolución 424/2020). Mientras estén vacíos, las
-// páginas muestran un aviso visible en su lugar.
+// páginas se identifican por marca y contacto hasta que se carguen.
 export const LEGAL_INFO = {
   razonSocial: "",   // Ej: "Juan Pérez" o "Duo19-13 S.R.L."
   cuit: "",          // Ej: "20-12345678-9"
   domicilio: "",     // Domicilio legal completo
 } as const;
 
-/** Devuelve el dato legal o un marcador visible si todavía no se cargó. */
-export function legalValue(value: string, label: string): string {
-  return value.trim() || `[COMPLETAR: ${label}]`;
+/**
+ * true sólo cuando están cargados los tres datos fiscales.
+ *
+ * Mientras falte alguno, las páginas legales identifican a la tienda por su
+ * marca y sus canales de contacto: es preferible a mostrar campos a medio
+ * llenar, que se leen como un sitio sin terminar.
+ */
+export const HAS_LEGAL_INFO = Boolean(
+  LEGAL_INFO.razonSocial.trim() && LEGAL_INFO.cuit.trim() && LEGAL_INFO.domicilio.trim()
+);
+
+/** Cláusula de identificación fiscal. Usar sólo si HAS_LEGAL_INFO es true. */
+export function legalIdentification(): string {
+  return `${LEGAL_INFO.razonSocial}, CUIT ${LEGAL_INFO.cuit}, con domicilio en ${LEGAL_INFO.domicilio}`;
 }
 
 export const LEGAL_LINKS = [

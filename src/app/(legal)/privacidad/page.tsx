@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import {
   BUSINESS_NAME,
   CONTACT_EMAIL,
-  LEGAL_INFO,
-  legalValue,
+  HAS_LEGAL_INFO,
+  legalIdentification,
 } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -27,12 +27,15 @@ export default function PrivacidadPage() {
       </p>
 
       <h2>1. Responsable</h2>
-      <p>
-        El responsable de la base de datos es{" "}
-        {legalValue(LEGAL_INFO.razonSocial, "razón social")}, CUIT{" "}
-        {legalValue(LEGAL_INFO.cuit, "CUIT")}, con domicilio en{" "}
-        {legalValue(LEGAL_INFO.domicilio, "domicilio legal")}.
-      </p>
+      {HAS_LEGAL_INFO ? (
+        <p>El responsable de la base de datos es {legalIdentification()}.</p>
+      ) : (
+        <p>
+          El responsable de la base de datos es {BUSINESS_NAME}. Por cualquier consulta
+          sobre tus datos personales, escribinos a{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> y te respondemos.
+        </p>
+      )}
 
       <h2>2. Qué datos recolectamos</h2>
       <ul>

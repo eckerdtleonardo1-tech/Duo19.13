@@ -4,8 +4,8 @@ import {
   BUSINESS_NAME,
   CONSUMER_DEFENSE_URL,
   CONTACT_EMAIL,
-  LEGAL_INFO,
-  legalValue,
+  HAS_LEGAL_INFO,
+  legalIdentification,
   WHATSAPP_URL,
 } from "@/lib/constants";
 
@@ -24,12 +24,20 @@ export default function TerminosPage() {
       <p className="text-xs text-text-muted/60">Última actualización: {LAST_UPDATED}</p>
 
       <h2>1. Quiénes somos</h2>
-      <p>
-        Este sitio es operado por {legalValue(LEGAL_INFO.razonSocial, "razón social")}, CUIT{" "}
-        {legalValue(LEGAL_INFO.cuit, "CUIT")}, con domicilio en{" "}
-        {legalValue(LEGAL_INFO.domicilio, "domicilio legal")}, que comercializa bajo el nombre
-        {" "}{BUSINESS_NAME} (en adelante, &ldquo;la Tienda&rdquo;).
-      </p>
+      {HAS_LEGAL_INFO ? (
+        <p>
+          Este sitio es operado por {legalIdentification()}, que comercializa bajo el
+          nombre {BUSINESS_NAME} (en adelante, &ldquo;la Tienda&rdquo;).
+        </p>
+      ) : (
+        <p>
+          Este sitio es operado por {BUSINESS_NAME} (en adelante, &ldquo;la Tienda&rdquo;),
+          una tienda online de accesorios gamer con envíos a todo el país. Podés
+          contactarnos por{" "}
+          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">WhatsApp</a> o
+          escribiendo a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        </p>
+      )}
       <p>
         El uso de este sitio y la realización de un pedido implican la aceptación de estos
         términos. Si no estás de acuerdo con alguno de ellos, no utilices el sitio.
