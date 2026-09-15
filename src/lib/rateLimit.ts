@@ -10,6 +10,27 @@ const IP_MAX_ATTEMPTS = 20;
 const REGISTER_IP_WINDOW_MINUTES = 60;
 const REGISTER_IP_MAX_ATTEMPTS = 5; // máximo 5 registros por IP por hora
 
+// ── Purga ─────────────────────────────────────────────────────────────────────
+// Ninguna consulta mira más atrás de 60 minutos, así que las filas viejas no
+// sirven para nada y la tabla sólo crecía. Se limpia de vez en cuando desde las
+// mismas escrituras en vez de con un cron: no hay nada programado en Supabase y
+// una tarea más que mantener no se justifica para esto.
+const ATTEMPT_RETENTION_DAYS = 7;
+const PRUNE_CHANCE = 0.02; // ~1 de cada 50 escrituras
+
+async function pruneOldAttempts() {
+  if (Math.random() > PRUNE_CHANCE) return;
+  try {
+    await pool.query(
+      `DELETE FROM login_attempts
+       WHERE attempted_at < now() - interval '${ATTEMPT_RETENTION_DAYS} days'`
+    );
+  } catch (err) {
+    // Limpiar es best-effort: que falle no puede romper un login.
+    console.error("No se pudieron purgar los intentos viejos:", err);
+  }
+}
+
 export function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0].trim();
@@ -42,6 +63,7 @@ export async function recordLoginAttempt(ip: string, email: string, success: boo
     "INSERT INTO login_attempts (ip_address, email, success) VALUES ($1, $2, $3)",
     [ip, email, success]
   );
+  await pruneOldAttempts();
 }
 
 // ── Register ──────────────────────────────────────────────────────────────────
@@ -67,6 +89,7 @@ export async function recordRegisterAttempt(ip: string) {
     "INSERT INTO login_attempts (ip_address, email, success) VALUES ($1, '__register__', true)",
     [ip]
   );
+  await pruneOldAttempts();
 }
 
 // ── Password reset ────────────────────────────────────────────────────────────
@@ -95,4 +118,5 @@ export async function recordPasswordResetAttempt(ip: string) {
     "INSERT INTO login_attempts (ip_address, email, success) VALUES ($1, '__reset__', true)",
     [ip]
   );
+  await pruneOldAttempts();
 }

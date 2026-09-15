@@ -7,6 +7,7 @@ import {
   recordPasswordResetAttempt,
 } from "@/lib/rateLimit";
 import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
+import { readEmail } from "@/lib/requestInput";
 
 // Respuesta única para todos los casos: si dijéramos "ese email no existe",
 // el formulario serviría para averiguar qué cuentas están registradas.
@@ -26,10 +27,12 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const email = body?.email?.trim().toLowerCase();
+  const email = readEmail(body?.email);
 
+  // Un email mal formado no puede existir en la base: se devuelve la misma
+  // respuesta de siempre en vez de gastar una consulta o delatar el caso.
   if (!email) {
-    return NextResponse.json({ error: "El email es requerido" }, { status: 400 });
+    return NextResponse.json(GENERIC_RESPONSE);
   }
 
   await recordPasswordResetAttempt(ip);

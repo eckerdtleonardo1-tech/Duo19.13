@@ -304,10 +304,13 @@ export function Header() {
         </div>
 
         {/* ── Mobile drawer ──────────────────────────────────────── */}
+        {/* max-h-0 lo oculta a la vista, pero sus links seguían recibiendo
+            foco con Tab estando cerrado. inert los saca del orden de
+            tabulación y del árbol de accesibilidad. */}
         <div
           id="mobile-nav"
           className={`overflow-hidden border-t border-border bg-bg-dark transition-all duration-300 md:hidden ${mobileOpen ? "max-h-screen" : "max-h-0"}`}
-          aria-hidden={!mobileOpen}
+          inert={!mobileOpen}
         >
           <div className="flex flex-col gap-1 px-4 py-4">
             {/* Mobile search */}

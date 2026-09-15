@@ -4,6 +4,11 @@ import { hashPassword } from "@/lib/auth";
 
 const TOKEN_TTL_MINUTES = 60;
 
+// Un token usado o vencido no vuelve a servir: se conservan unos días por si
+// hay que revisar qué pasó con una cuenta y después se borran, para que la
+// tabla no crezca sin techo.
+const TOKEN_RETENTION_DAYS = 7;
+
 /**
  * En la base solo vive el hash del token; el valor en claro viaja únicamente
  * en el mail. Así, si alguien consigue leer la tabla, no puede restablecer
@@ -33,6 +38,11 @@ export async function createResetToken(email: string): Promise<ResetRequest | nu
   await pool.query(
     "UPDATE password_resets SET used_at = now() WHERE user_id = $1 AND used_at IS NULL",
     [user.id]
+  );
+
+  await pool.query(
+    `DELETE FROM password_resets
+     WHERE created_at < now() - interval '${TOKEN_RETENTION_DAYS} days'`
   );
 
   await pool.query(

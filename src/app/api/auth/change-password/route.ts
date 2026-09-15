@@ -7,6 +7,7 @@ import {
   requireUser,
   setSessionCookie,
 } from "@/lib/auth";
+import { readPassword } from "@/lib/requestInput";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -16,24 +17,25 @@ export async function POST(request: Request) {
     const user = await requireUser();
     const body = await request.json().catch(() => null);
 
-    const currentPassword = body?.currentPassword;
-    const newPassword = body?.newPassword;
+    const currentPassword =
+      typeof body?.currentPassword === "string" ? body.currentPassword : null;
+    const newPassword = readPassword(
+      body?.newPassword,
+      MIN_PASSWORD_LENGTH,
+      MAX_PASSWORD_LENGTH
+    );
 
-    if (!currentPassword || !newPassword) {
+    if (!currentPassword) {
       return NextResponse.json(
         { error: "Tenés que completar la contraseña actual y la nueva" },
         { status: 400 }
       );
     }
-    if (typeof newPassword !== "string" || newPassword.length < MIN_PASSWORD_LENGTH) {
+    if (!newPassword) {
       return NextResponse.json(
-        { error: `La contraseña nueva debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres` },
-        { status: 400 }
-      );
-    }
-    if (newPassword.length > MAX_PASSWORD_LENGTH) {
-      return NextResponse.json(
-        { error: "La contraseña nueva es demasiado larga" },
+        {
+          error: `La contraseña nueva debe tener entre ${MIN_PASSWORD_LENGTH} y ${MAX_PASSWORD_LENGTH} caracteres`,
+        },
         { status: 400 }
       );
     }

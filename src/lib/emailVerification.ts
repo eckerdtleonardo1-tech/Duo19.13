@@ -3,6 +3,10 @@ import { pool } from "@/lib/db";
 
 const TOKEN_TTL_HOURS = 48;
 
+// Igual que en password_resets: los tokens ya gastados o vencidos se borran
+// después de unos días en vez de acumularse para siempre.
+const TOKEN_RETENTION_DAYS = 14;
+
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -17,6 +21,10 @@ export async function createVerificationToken(userId: number): Promise<string> {
   await pool.query(
     "UPDATE email_verifications SET used_at = now() WHERE user_id = $1 AND used_at IS NULL",
     [userId]
+  );
+  await pool.query(
+    `DELETE FROM email_verifications
+     WHERE created_at < now() - interval '${TOKEN_RETENTION_DAYS} days'`
   );
   await pool.query(
     `INSERT INTO email_verifications (user_id, token_hash, expires_at)

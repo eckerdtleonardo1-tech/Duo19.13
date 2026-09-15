@@ -9,6 +9,7 @@ import {
   sendMail,
 } from "@/lib/mailer";
 import { BUSINESS_NAME, CONTACT_EMAIL, SITE_URL } from "@/lib/constants";
+import { readEmail, readText } from "@/lib/requestInput";
 
 // Límites de longitud para campos de texto del pedido
 const FIELD_LIMITS = {
@@ -26,30 +27,43 @@ const MAX_ITEMS_PER_ORDER = 50;
 const MAX_QTY_PER_ITEM = 999;
 
 function validateOrderBody(body: Record<string, unknown>): string | null {
-  if (!body?.customerName) return "El nombre es requerido";
-  if (!body?.customerPhone) return "El teléfono es requerido";
+  // Cada campo se valida como texto explícitamente. Antes el chequeo de
+  // longitud era `if (value && typeof value === "string")`, así que un número o
+  // un objeto lo salteaba entero y llegaba hasta Postgres.
+  for (const [field, max] of Object.entries(FIELD_LIMITS)) {
+    const value = body[field];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "string") return `El campo "${field}" tiene que ser texto`;
+    if (value.length > max) {
+      return `El campo "${field}" supera el máximo de ${max} caracteres`;
+    }
+  }
+
+  if (!readText(body?.customerName, FIELD_LIMITS.customerName)) return "El nombre es requerido";
+  if (!readText(body?.customerPhone, FIELD_LIMITS.customerPhone)) return "El teléfono es requerido";
+  // El email es opcional, pero si viene tiene que servir: es la dirección a la
+  // que sale la confirmación del pedido.
+  if (body?.customerEmail !== undefined && body?.customerEmail !== null && body?.customerEmail !== "") {
+    if (!readEmail(body.customerEmail)) return "El email no es válido";
+  }
 
   if (!isShippingMethod(body?.shippingMethod)) return "Método de entrega inválido";
 
   // El domicilio sólo hace falta si el pedido se envía; con retiro en local no
   // hay dirección de entrega que pedir.
   if (body.shippingMethod === "envio") {
-    if (!body?.customerAddress) return "La dirección es requerida";
-    if (!body?.customerProvince) return "La provincia es requerida";
-    if (!body?.customerCity) return "La ciudad es requerida";
-    if (!body?.customerPostalCode) return "El código postal es requerido";
+    if (!readText(body?.customerAddress, FIELD_LIMITS.customerAddress))
+      return "La dirección es requerida";
+    if (!readText(body?.customerProvince, FIELD_LIMITS.customerProvince))
+      return "La provincia es requerida";
+    if (!readText(body?.customerCity, FIELD_LIMITS.customerCity))
+      return "La ciudad es requerida";
+    if (!readText(body?.customerPostalCode, FIELD_LIMITS.customerPostalCode))
+      return "El código postal es requerido";
   }
 
   if (!Array.isArray(body?.items) || (body.items as unknown[]).length === 0)
     return "El pedido no tiene productos";
-
-  // Validar longitudes máximas de texto
-  for (const [field, max] of Object.entries(FIELD_LIMITS)) {
-    const value = body[field];
-    if (value && typeof value === "string" && value.length > max) {
-      return `El campo "${field}" supera el máximo de ${max} caracteres`;
-    }
-  }
 
   // Validar cantidad de items
   const items = body.items as unknown[];

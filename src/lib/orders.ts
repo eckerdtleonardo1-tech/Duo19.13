@@ -208,14 +208,6 @@ export async function listOrdersForUser(userId: number): Promise<Order[]> {
   return attachItems(rows.map(mapOrderRow));
 }
 
-export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
-  const { rows } = await pool.query(
-    "SELECT * FROM order_items WHERE order_id = $1 ORDER BY id",
-    [orderId]
-  );
-  return rows.map(mapItemRow);
-}
-
 const CANCELLED_STATUS = "Cancelado";
 
 /**

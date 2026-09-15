@@ -152,6 +152,12 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token_hash);
 CREATE INDEX IF NOT EXISTS idx_email_verifications_user ON email_verifications(user_id);
 
+-- La purga de intentos viejos filtra sólo por fecha, y los índices existentes
+-- empiezan por ip_address / email, así que no le sirven.
+CREATE INDEX IF NOT EXISTS idx_login_attempts_attempted_at ON login_attempts(attempted_at);
+CREATE INDEX IF NOT EXISTS idx_password_resets_created ON password_resets(created_at);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_created ON email_verifications(created_at);
+
 -- Envío pendiente de cotizar. Sin esta marca, un pedido "a convenir" queda
 -- guardado con shipping_cost = 0 y en el panel se lee igual que uno con envío
 -- sin cargo, con el riesgo de despacharlo gratis por error.

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { validateProductInput } from "@/app/api/products/route";
-import { categoryLabel, FULFILLED_ORDER_STATUSES, ORDER_STATUSES } from "@/lib/constants";
+import {
+  categoryLabel,
+  FULFILLED_ORDER_STATUSES,
+  MAX_GALLERY_IMAGES,
+  MAX_PRODUCT_DESCRIPTION_LENGTH,
+  MAX_PRODUCT_NAME_LENGTH,
+  ORDER_STATUSES,
+} from "@/lib/constants";
 
 const valido = {
   name: "Teclado",
@@ -35,6 +42,38 @@ describe("validateProductInput", () => {
   it("corta los textos que no entran en la base", () => {
     expect(validateProductInput({ ...valido, category: "x".repeat(41) })).toMatch(/40/);
     expect(validateProductInput({ ...valido, brand: "x".repeat(61) })).toMatch(/60/);
+  });
+
+  // products.name es VARCHAR(200). Sin este chequeo el texto llegaba a
+  // Postgres, que cortaba con un error crudo: el panel mostraba "no se pudo
+  // guardar el producto" sin decir cuál era el campo culpable.
+  it("rechaza un nombre más largo que la columna", () => {
+    const largo = "x".repeat(MAX_PRODUCT_NAME_LENGTH + 1);
+    expect(validateProductInput({ ...valido, name: largo })).toMatch(/nombre/i);
+    expect(
+      validateProductInput({ ...valido, name: "x".repeat(MAX_PRODUCT_NAME_LENGTH) })
+    ).toBeNull();
+  });
+
+  it("rechaza una descripción desmedida o que no es texto", () => {
+    const larga = "x".repeat(MAX_PRODUCT_DESCRIPTION_LENGTH + 1);
+    expect(validateProductInput({ ...valido, description: larga })).toMatch(/descripción/i);
+    expect(validateProductInput({ ...valido, description: 123 })).toMatch(/descripción/i);
+  });
+
+  it("el stock tiene que ser entero", () => {
+    // Medio teclado no existe, y products.stock es INTEGER.
+    expect(validateProductInput({ ...valido, stock: 2.5 })).toMatch(/stock/i);
+    expect(validateProductInput({ ...valido, stock: "5" })).toMatch(/stock/i);
+  });
+
+  // El tope de la API decía 6 y la base guardaba 4: las imágenes de más se
+  // perdían en silencio, con la request devolviendo 201.
+  it("usa el mismo tope de galería que guarda la base", () => {
+    const justas = Array.from({ length: MAX_GALLERY_IMAGES }, () => "https://example.com/x.jpg");
+    const unaDeMas = [...justas, "https://example.com/x.jpg"];
+    expect(validateProductInput({ ...valido, gallery: justas })).toBeNull();
+    expect(validateProductInput({ ...valido, gallery: unaDeMas })).toMatch(/galería/i);
   });
 
   it("rechaza una imagen principal enorme", () => {

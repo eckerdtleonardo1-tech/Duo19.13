@@ -1,15 +1,6 @@
-import type { Localidad, Provincia } from "@/types";
+import type { Localidad } from "@/types";
 
 const BASE_URL = "https://apis.datos.gob.ar/georef/api";
-
-export async function fetchProvincias(): Promise<Provincia[]> {
-  const res = await fetch(
-    `${BASE_URL}/provincias?campos=id,nombre&orden=nombre&max=24`
-  );
-  if (!res.ok) throw new Error("No se pudieron cargar las provincias");
-  const data = await res.json();
-  return data.provincias;
-}
 
 export async function fetchLocalidades(provinciaId: string): Promise<Localidad[]> {
   const res = await fetch(

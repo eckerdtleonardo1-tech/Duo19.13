@@ -63,6 +63,11 @@ es donde un error cuesta plata o abre un agujero:
 - **Envío** (`src/lib/shipping.test.ts`): tarifas por zona, provincia
   desconocida cayendo en la tarifa más cara, y que las compras grandes queden
   "a convenir" y no gratis.
+- **Entrada de la API** (`src/lib/requestInput.test.ts`): que un email con
+  formato inválido no cree una cuenta, y que un número o un objeto en el body
+  devuelvan 400 en vez de reventar el handler.
+- **Productos** (`src/lib/validation.test.ts`): topes de nombre, descripción y
+  galería alineados con las columnas de la base, y stock entero.
 - **Mails** (`src/lib/mailer.test.ts`): que un nombre o producto con
   etiquetas HTML no se inyecte en el mensaje, y que un envío a convenir nunca
   diga "sin cargo".

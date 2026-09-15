@@ -99,29 +99,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!user) return;
       (async () => {
         try {
-          const [cartRes, productsRes] = await Promise.all([
-            fetch("/api/cart"),
-            fetch("/api/products"),
-          ]);
-          const cartData = await cartRes.json();
-          const productsData = await productsRes.json();
-          const productsById = new Map<number, Product>(
-            productsData.products.map((p: Product) => [p.id, p])
-          );
-          const hydratedItems: CartItem[] = [];
-          for (const saved of cartData.cart ?? []) {
-            const product = productsById.get(saved.productId);
-            if (!product) continue;
-            hydratedItems.push({
-              productId: product.id,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              stock: product.stock,
-              qty: Math.min(saved.qty, product.stock),
-            });
-          }
-          setItems(hydratedItems);
+          // /api/cart ya devuelve nombre, precio, imagen y stock actuales.
+          // Antes esto además pedía /api/products —el catálogo completo, con
+          // las imágenes en base64— sólo para completar esos campos.
+          const res = await fetch("/api/cart");
+          const data = await res.json();
+          setItems(Array.isArray(data.cart) ? data.cart : []);
         } catch {
           // Si falla, se conserva lo que haya en localStorage.
         }
@@ -133,32 +116,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (previous === null && user) {
       (async () => {
         try {
-          const [cartRes, productsRes] = await Promise.all([
-            fetch("/api/cart"),
-            fetch("/api/products"),
-          ]);
-          const cartData = await cartRes.json();
-          const productsData = await productsRes.json();
-          const productsById = new Map<number, Product>(
-            productsData.products.map((p: Product) => [p.id, p])
-          );
+          const res = await fetch("/api/cart");
+          const data = await res.json();
+          const serverItems: CartItem[] = Array.isArray(data.cart) ? data.cart : [];
 
           setItems((current) => {
             const merged = new Map<number, CartItem>();
             for (const item of current) merged.set(item.productId, item);
-            for (const saved of cartData.cart ?? []) {
-              const product = productsById.get(saved.productId);
-              if (!product) continue;
+            // Lo que viene del servidor pisa los datos del item local: su
+            // precio y su stock acaban de leerse de la base, el local puede
+            // llevar días guardado en el navegador.
+            for (const saved of serverItems) {
               const existing = merged.get(saved.productId);
               const qty = (existing?.qty ?? 0) + saved.qty;
-              merged.set(saved.productId, {
-                productId: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                stock: product.stock,
-                qty: Math.min(qty, product.stock),
-              });
+              merged.set(saved.productId, { ...saved, qty: Math.min(qty, saved.stock) });
             }
             const next = Array.from(merged.values());
             syncToServer(next);

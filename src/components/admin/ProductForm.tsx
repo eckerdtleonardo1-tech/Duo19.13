@@ -2,7 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { resizeImageFile } from "@/lib/image";
-import { CATEGORIES, MAX_GALLERY_IMAGES } from "@/lib/constants";
+import {
+  CATEGORIES,
+  MAX_BRAND_LENGTH,
+  MAX_CATEGORY_LENGTH,
+  MAX_GALLERY_IMAGES,
+  MAX_PRODUCT_DESCRIPTION_LENGTH,
+  MAX_PRODUCT_NAME_LENGTH,
+} from "@/lib/constants";
 import type { Product } from "@/types";
 
 export interface ProductFormValues {
@@ -17,11 +24,20 @@ export interface ProductFormValues {
   featured: boolean;
 }
 
-const emptyValues: ProductFormValues = {
+/**
+ * Precio y stock viven aparte, como texto.
+ *
+ * Estaban dentro de este estado como número y el input se renderizaba con
+ * `value={stock === 0 ? "" : stock}`. Al escribir un 0 el campo se vaciaba
+ * solo y, al ser `required`, el navegador bloqueaba el envío: no había forma
+ * de marcar un producto agotado, ni de volver a editar uno que ya lo estaba.
+ * Guardando el texto crudo el 0 se ve y se envía como cualquier otro valor.
+ */
+type ProductFormState = Omit<ProductFormValues, "price" | "stock">;
+
+const emptyValues: ProductFormState = {
   name: "",
   description: "",
-  price: 0,
-  stock: 0,
   image: "",
   gallery: [],
   category: CATEGORIES[0].value,
@@ -40,13 +56,11 @@ export function ProductForm({
 }) {
   // El form se remonta con `key` al cambiar de producto (ver AdminProductsClient),
   // así que alcanza con inicializar el estado una vez.
-  const [values, setValues] = useState<ProductFormValues>(
+  const [values, setValues] = useState<ProductFormState>(
     product
       ? {
           name: product.name,
           description: product.description,
-          price: product.price,
-          stock: product.stock,
           image: product.image,
           gallery: product.gallery,
           category: product.category,
@@ -55,6 +69,8 @@ export function ProductForm({
         }
       : emptyValues
   );
+  const [priceText, setPriceText] = useState(product ? String(product.price) : "");
+  const [stockText, setStockText] = useState(product ? String(product.stock) : "");
   
   // Para manejar categorías dinámicas
   const isCustomCategory = product && !CATEGORIES.some(c => c.value === product.category);
@@ -64,17 +80,27 @@ export function ProductForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // resizeImageFile rechaza si el archivo no es una imagen válida. Sin el
+  // catch la promesa quedaba colgada y el admin no veía nada pasar.
   async function handleImageChange(file: File | undefined) {
     if (!file) return;
-    const dataUrl = await resizeImageFile(file);
-    setValues((v) => ({ ...v, image: dataUrl }));
+    try {
+      const dataUrl = await resizeImageFile(file);
+      setValues((v) => ({ ...v, image: dataUrl }));
+    } catch {
+      setError("No pudimos procesar esa imagen. Probá con otro archivo.");
+    }
   }
 
   async function handleGalleryChange(fileList: FileList | null) {
     if (!fileList) return;
     const files = Array.from(fileList).slice(0, MAX_GALLERY_IMAGES);
-    const dataUrls = await Promise.all(files.map((f) => resizeImageFile(f)));
-    setValues((v) => ({ ...v, gallery: dataUrls }));
+    try {
+      const dataUrls = await Promise.all(files.map((f) => resizeImageFile(f)));
+      setValues((v) => ({ ...v, gallery: dataUrls }));
+    } catch {
+      setError("No pudimos procesar alguna de las imágenes. Probá con otros archivos.");
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -91,10 +117,21 @@ export function ProductForm({
       return;
     }
 
+    const price = Number(priceText);
+    const stock = Number(stockText);
+    if (priceText.trim() === "" || !Number.isFinite(price) || price < 0) {
+      setError("El precio tiene que ser un número de 0 para arriba");
+      return;
+    }
+    if (stockText.trim() === "" || !Number.isInteger(stock) || stock < 0) {
+      setError("El stock tiene que ser un número entero de 0 para arriba");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const finalCategory = isAddingNewCategory ? newCategoryName.trim() : values.category;
-      await onSubmit({ ...values, category: finalCategory });
+      await onSubmit({ ...values, price, stock, category: finalCategory });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar el producto");
     } finally {
@@ -116,6 +153,7 @@ export function ProductForm({
         <input
           type="text"
           required
+          maxLength={MAX_PRODUCT_NAME_LENGTH}
           value={values.name}
           onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
           className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
@@ -126,6 +164,7 @@ export function ProductForm({
         <label className="mb-1 block text-sm text-text-muted">Descripción</label>
         <textarea
           rows={3}
+          maxLength={MAX_PRODUCT_DESCRIPTION_LENGTH}
           value={values.description}
           onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
           className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
@@ -140,8 +179,8 @@ export function ProductForm({
             required
             min={0}
             step="0.01"
-            value={values.price === 0 ? "" : values.price}
-            onChange={(e) => setValues((v) => ({ ...v, price: e.target.value === "" ? 0 : Number(e.target.value) }))}
+            value={priceText}
+            onChange={(e) => setPriceText(e.target.value)}
             className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
           />
         </div>
@@ -151,8 +190,9 @@ export function ProductForm({
             type="number"
             required
             min={0}
-            value={values.stock === 0 ? "" : values.stock}
-            onChange={(e) => setValues((v) => ({ ...v, stock: e.target.value === "" ? 0 : Number(e.target.value) }))}
+            step="1"
+            value={stockText}
+            onChange={(e) => setStockText(e.target.value)}
             className="w-full rounded-md border border-border bg-bg-dark px-3 py-2 outline-none focus:border-neon-secondary"
           />
         </div>
@@ -165,7 +205,7 @@ export function ProductForm({
         <input
           id="product-brand"
           type="text"
-          maxLength={60}
+          maxLength={MAX_BRAND_LENGTH}
           value={values.brand}
           onChange={(e) => setValues((v) => ({ ...v, brand: e.target.value }))}
           placeholder="Ej: Logitech, Redragon, HyperX"
@@ -205,6 +245,7 @@ export function ProductForm({
             <input
               type="text"
               required
+              maxLength={MAX_CATEGORY_LENGTH}
               value={newCategoryName}
               placeholder="Ej: Monitores, Cables, etc."
               onChange={(e) => setNewCategoryName(e.target.value)}

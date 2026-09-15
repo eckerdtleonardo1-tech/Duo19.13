@@ -1,6 +1,5 @@
 import { pool } from "@/lib/db";
-import { FULFILLED_ORDER_STATUSES } from "@/lib/constants";
-import { MAX_COMMENT_LENGTH } from "@/lib/constants";
+import { FULFILLED_ORDER_STATUSES, MAX_COMMENT_LENGTH } from "@/lib/constants";
 import type { Review } from "@/types";
 
 function mapRow(row: Record<string, unknown>): Review {
@@ -28,7 +27,7 @@ export async function listReviewsForProduct(productId: number): Promise<Review[]
 }
 
 /** La reseña del usuario actual, para precargar el formulario. */
-export async function getUserReview(
+async function getUserReview(
   productId: number,
   userId: number
 ): Promise<Review | null> {
@@ -75,8 +74,11 @@ export async function deleteReview(productId: number, userId: number): Promise<b
 }
 
 /**
- * Si el usuario compró el producto se muestra "compra verificada". Se cuenta
- * cualquier pedido que no esté cancelado.
+ * Habilita opinar sólo a quien compró de verdad.
+ *
+ * Cuenta únicamente los pedidos enviados o entregados: el pedido se crea antes
+ * de pagar, así que aceptar "En preparación" dejaría reseñar con sólo apretar
+ * comprar. Comparte lista con las métricas del panel para que no se separen.
  */
 export async function hasPurchased(productId: number, userId: number): Promise<boolean> {
   const { rows } = await pool.query(

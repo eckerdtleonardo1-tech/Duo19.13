@@ -5,6 +5,7 @@ import {
   isPasswordResetLocked,
   recordPasswordResetAttempt,
 } from "@/lib/rateLimit";
+import { readPassword } from "@/lib/requestInput";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 128;
@@ -24,23 +25,22 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const token = body?.token;
-  const password = body?.password;
+  const token = typeof body?.token === "string" ? body.token : null;
+  const password = readPassword(body?.password, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH);
 
-  if (!token || !password) {
+  if (!token) {
     return NextResponse.json(
       { error: "Faltan datos para restablecer la contraseña" },
       { status: 400 }
     );
   }
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  if (!password) {
     return NextResponse.json(
-      { error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres` },
+      {
+        error: `La contraseña debe tener entre ${MIN_PASSWORD_LENGTH} y ${MAX_PASSWORD_LENGTH} caracteres`,
+      },
       { status: 400 }
     );
-  }
-  if (password.length > MAX_PASSWORD_LENGTH) {
-    return NextResponse.json({ error: "La contraseña es demasiado larga" }, { status: 400 });
   }
 
   const ok = await resetPasswordWithToken(token, password);

@@ -2,14 +2,18 @@ import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { comparePassword, setSessionCookie } from "@/lib/auth";
 import { getClientIp, isLoginLocked, recordLoginAttempt } from "@/lib/rateLimit";
+import { readEmail } from "@/lib/requestInput";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const email = body?.email?.trim().toLowerCase();
+  const email = readEmail(body?.email);
   const password = body?.password;
   const ip = getClientIp(request);
 
-  if (!email || !password) {
+  // Un email mal formado se trata como campo faltante y no como un caso
+  // aparte: el formulario ya es type="email", así que distinguirlo sólo le
+  // daría información extra a quien sondea la API.
+  if (!email || typeof password !== "string" || !password) {
     return NextResponse.json({ error: "Email y contraseña son requeridos" }, { status: 400 });
   }
 

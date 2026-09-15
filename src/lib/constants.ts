@@ -26,15 +26,22 @@ export const CATEGORIES = [
   { value: "organizadores-cables", label: "Organizadores de Cables" },
 ] as const;
 
-export type CategoryValue = (typeof CATEGORIES)[number]["value"];
-
-export const CATEGORY_VALUES = CATEGORIES.map((c) => c.value) as CategoryValue[];
-
 export function categoryLabel(value: string): string {
   return CATEGORIES.find((c) => c.value === value)?.label ?? value;
 }
 
+/**
+ * Topes de los campos del producto.
+ *
+ * Tienen que coincidir con las columnas de scripts/schema.sql: si la API deja
+ * pasar un texto más largo que la columna, Postgres corta con un error crudo y
+ * el panel muestra un "no se pudo guardar" sin explicar qué pasó.
+ */
 export const MAX_GALLERY_IMAGES = 4;
+export const MAX_PRODUCT_NAME_LENGTH = 200; // products.name VARCHAR(200)
+export const MAX_PRODUCT_DESCRIPTION_LENGTH = 5000; // products.description TEXT
+export const MAX_CATEGORY_LENGTH = 40; // products.category VARCHAR(40)
+export const MAX_BRAND_LENGTH = 60; // products.brand VARCHAR(60)
 
 /** Tope del comentario de una reseña. Vive acá y no en lib/reviews porque ese
  *  módulo toca la base y no puede importarse desde un componente cliente. */

@@ -5,11 +5,12 @@ import { getClientIp, isRegisterLocked, recordRegisterAttempt } from "@/lib/rate
 import { createVerificationToken } from "@/lib/emailVerification";
 import { buildEmailVerificationEmail, sendMail } from "@/lib/mailer";
 import { BUSINESS_NAME, SITE_URL } from "@/lib/constants";
+import { readEmail, readPassword, readText } from "@/lib/requestInput";
 
 // Límites de longitud para campos de texto
 const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
 const MAX_NAME_LENGTH = 100;
-const MAX_EMAIL_LENGTH = 254; // RFC 5321
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -23,34 +24,26 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const name = body?.name?.trim();
-  const email = body?.email?.trim().toLowerCase();
-  const password = body?.password;
+  const name = readText(body?.name, MAX_NAME_LENGTH);
+  const email = readEmail(body?.email);
+  const password = readPassword(body?.password, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH);
 
-  // Validaciones de presencia y longitud mínima
-  if (!name || !email || !password) {
+  if (!name) {
     return NextResponse.json(
-      { error: "Nombre, email y contraseña son requeridos" },
+      { error: `El nombre es requerido y no puede superar los ${MAX_NAME_LENGTH} caracteres` },
       { status: 400 }
     );
   }
-
-  // Validaciones de longitud
-  if (name.length > MAX_NAME_LENGTH) {
-    return NextResponse.json({ error: "El nombre es demasiado largo" }, { status: 400 });
+  // Sin este chequeo entraba cualquier texto como email, y esa cuenta quedaba
+  // sin forma de recibir el mail del pedido ni de recuperar la contraseña.
+  if (!email) {
+    return NextResponse.json({ error: "Escribí un email válido" }, { status: 400 });
   }
-  if (email.length > MAX_EMAIL_LENGTH) {
-    return NextResponse.json({ error: "El email es demasiado largo" }, { status: 400 });
-  }
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  if (!password) {
     return NextResponse.json(
-      { error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres` },
-      { status: 400 }
-    );
-  }
-  if (password.length > 128) {
-    return NextResponse.json(
-      { error: "La contraseña es demasiado larga" },
+      {
+        error: `La contraseña debe tener entre ${MIN_PASSWORD_LENGTH} y ${MAX_PASSWORD_LENGTH} caracteres`,
+      },
       { status: 400 }
     );
   }
