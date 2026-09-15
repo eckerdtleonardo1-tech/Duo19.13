@@ -56,11 +56,17 @@ export function ProductCard({
         </Link>
 
         {/* Vista rápida — hermano del Link, no anidado, para no meter un botón
-            adentro de un <a>. */}
+            adentro de un <a>.
+
+            Sólo en dispositivos con mouse. Antes se ocultaba con opacity-0 y se
+            revelaba con group-hover, pero en una pantalla táctil no hay hover:
+            el botón quedaba invisible y aun así respondía al toque, de modo que
+            tocar la parte baja de la foto abría un modal salido de la nada. En
+            el teléfono la ficha del producto cumple mejor esa función. */}
         <button
           type="button"
           onClick={() => setDetailsOpen(true)}
-          className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-bg-dark/90 px-3 py-1.5 text-xs text-text-main opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:border-neon-secondary hover:text-neon-secondary focus-visible:opacity-100 group-hover:opacity-100"
+          className="absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-1.5 [@media(hover:hover)]:flex rounded-full border border-border bg-bg-dark/90 px-3 py-1.5 text-xs text-text-main opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:border-neon-secondary hover:text-neon-secondary focus-visible:opacity-100 group-hover:opacity-100"
         >
           <Eye size={13} aria-hidden="true" />
           Vista rápida
